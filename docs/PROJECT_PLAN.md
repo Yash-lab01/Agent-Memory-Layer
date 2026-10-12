@@ -52,9 +52,9 @@ Build an open-source Python library plus a small demo app that gives any chat ag
 - A small, clean Python API:
   ```python
   mem = MemoryLayer(store=..., llm=..., embedder=...)
-  mem.add(user_id, messages)           # extract + store
-  ctx = mem.search(user_id, query)     # retrieve
-  mem.forget(user_id, memory_id)       # delete
+  mem.add(user_id, messages)  # extract + store
+  ctx = mem.search(user_id, query)  # retrieve
+  mem.forget(user_id, memory_id)  # delete
   ```
 - Pluggable backends: LLM (Ollama, Groq, Gemini via LiteLLM), embedder, store.
 - Per-user isolation (namespaces) from day one.

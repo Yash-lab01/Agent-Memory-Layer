@@ -70,9 +70,9 @@ Keep this layout. Do not create new top-level folders or modules without asking.
 
 ```python
 mem = MemoryLayer(store=..., llm=..., embedder=...)
-mem.add(user_id, messages)           # extract + store
-ctx = mem.search(user_id, query)     # retrieve
-mem.forget(user_id, memory_id)       # delete
+mem.add(user_id, messages)  # extract + store
+ctx = mem.search(user_id, query)  # retrieve
+mem.forget(user_id, memory_id)  # delete
 ```
 
 Backends (LLM, embedder, store) are pluggable. **Per-user isolation (namespaces) from day one.** Every read and write is scoped by `user_id`. A query must never be able to return another user's memories.

@@ -89,13 +89,18 @@ mem = MemoryLayer()
 
 # 1. Ingest a conversation turn
 messages = [
-    {"role": "user", "content": "I recently moved from Pune to Bangalore to work on conversational AI."},
-    {"role": "assistant", "content": "Congratulations on the move to Bangalore!"}
+    {
+        "role": "user",
+        "content": "I recently moved from Pune to Bangalore to work on conversational AI.",
+    },
+    {"role": "assistant", "content": "Congratulations on the move to Bangalore!"},
 ]
 mem.add(user_id="user_123", messages=messages)
 
 # 2. Query relevant memories for a subsequent turn
-context = mem.search(user_id="user_123", query="Where do I live and what do I work on?", token_budget=300)
+context = mem.search(
+    user_id="user_123", query="Where do I live and what do I work on?", token_budget=300
+)
 print(context)
 # Output:
 # [Memories]
