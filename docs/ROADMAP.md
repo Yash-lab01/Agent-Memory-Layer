@@ -23,9 +23,9 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
 ---
 
 ## Milestone 1: Domain Models & Pluggable Storage Layer
-- [ ] **Phase 1.1: Core Data Contracts & Schemas**
-  - [ ] Implement `src/memlayer/models.py` with Pydantic v2 schemas (`Episode`, `MemoryItem`, `MemoryStatus`, `MemoryMetadata`)
-  - [ ] Unit tests for model validation, serialization, and edge cases in `tests/test_models.py`
+- [x] **Phase 1.1: Core Data Contracts & Schemas**
+  - [x] Implement `src/memlayer/models.py` with Pydantic v2 schemas (`Episode`, `MemoryItem`, `MemoryStatus`, `MemoryMetadata`)
+  - [x] Unit tests for model validation, serialization, and edge cases in `tests/test_models.py`
 - [ ] **Phase 1.2: Relational Store & Episode Logging (SQLite / SQLAlchemy 2.0)**
   - [ ] Implement `src/memlayer/store/sql.py` (SQLAlchemy 2.0 declarative models & repository)
   - [ ] Implement `src/memlayer/store/episodes.py` (Episode logger with provenance tracking)
