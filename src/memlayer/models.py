@@ -148,6 +148,4 @@ class SearchResult(BaseModel):
         default_factory=list, description="List of scored memories included"
     )
     token_count: int = Field(default=0, ge=0, description="Estimated token count of context")
-    skipped: bool = Field(
-        default=False, description="True if query router skipped memory lookup"
-    )
+    skipped: bool = Field(default=False, description="True if query router skipped memory lookup")
