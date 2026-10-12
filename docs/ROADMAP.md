@@ -5,20 +5,20 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
 ---
 
 ## Milestone 0: Scaffolding, Governance & Developer Tooling
-- [ ] **Phase 0.1: Project Skeleton & Packaging Setup**
-  - [ ] Initialize `pyproject.toml` (Python 3.11+) with dependencies and dev tools
-  - [ ] Configure `ruff`, `mypy`, and `pytest`
-  - [ ] Set up `.gitignore`, `.env.example`, and `.pre-commit-config.yaml`
-  - [ ] Create repository directory tree (`src/memlayer/`, `eval/`, `demo/`, `tests/`, `docs/`)
-- [ ] **Phase 0.2: Project Governance & Architecture Documentation**
-  - [ ] Establish canonical `AGENTS.md`
-  - [ ] Create `docs/ROADMAP.md` (this file)
-  - [ ] Create `docs/DECISIONS.md` with ADR-001 (Architecture Choices & Open Decisions Framework)
-  - [ ] Create `docs/ARCHITECTURE.md` (System components, read/write flows, data model)
-  - [ ] Create `docs/PRD.md` (Product requirements, non-goals, benchmark targets)
-- [ ] **Phase 0.3: CI Pipeline & Containerization Skeleton**
-  - [ ] Create `.github/workflows/ci.yml` (linting, type checking, unit tests)
-  - [ ] Create baseline `docker-compose.yml` for local service orchestration
+- [x] **Phase 0.1: Project Skeleton & Packaging Setup**
+  - [x] Initialize `pyproject.toml` (Python 3.11+) with dependencies and dev tools
+  - [x] Configure `ruff`, `mypy`, and `pytest`
+  - [x] Set up `.gitignore`, `.env.example`, and `.pre-commit-config.yaml`
+  - [x] Create repository directory tree (`src/memlayer/`, `eval/`, `demo/`, `tests/`, `docs/`)
+- [x] **Phase 0.2: Project Governance & Architecture Documentation**
+  - [x] Establish canonical `AGENTS.md`
+  - [x] Create `docs/ROADMAP.md` (this file)
+  - [x] Create `docs/DECISIONS.md` with ADR-001 (Architecture Choices & Open Decisions Framework)
+  - [x] Create `docs/ARCHITECTURE.md` (System components, read/write flows, data model)
+  - [x] Create `docs/PRD.md` (Product requirements, non-goals, benchmark targets)
+- [x] **Phase 0.3: CI Pipeline & Containerization Skeleton**
+  - [x] Create `.github/workflows/ci.yml` (linting, type checking, unit tests)
+  - [x] Create baseline `docker-compose.yml` for local service orchestration
 
 ---
 
