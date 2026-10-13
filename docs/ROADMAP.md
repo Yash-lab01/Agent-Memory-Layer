@@ -31,11 +31,11 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
   - [x] Implement `src/memlayer/store/episodes.py` (Episode logger with provenance tracking)
   - [x] Enforce strict per-user isolation (`user_id` filtering on all operations)
   - [x] Unit tests for CRUD and multi-user isolation in `tests/test_sql_store.py`
-- [ ] **Phase 1.3: Embeddings & Vector Store Adapter (Abstract + Local)**
-  - [ ] Implement embedder abstraction in `src/memlayer/llm/embedder.py` (LiteLLM / sentence-transformers)
-  - [ ] Implement vector store interface in `src/memlayer/store/vector_base.py`
-  - [ ] Implement local vector adapter in `src/memlayer/store/vector.py` (Qdrant in-memory/local)
-  - [ ] Unit tests for vector insertion, search, and namespace filtering in `tests/test_vector_store.py`
+- [x] **Phase 1.3: Embeddings & Vector Store Adapter (Abstract + Local)**
+  - [x] Implement embedder abstraction in `src/memlayer/llm/embedder.py` (LiteLLM / sentence-transformers)
+  - [x] Implement vector store interface in `src/memlayer/store/vector_base.py`
+  - [x] Implement local vector adapter in `src/memlayer/store/vector.py` (Qdrant in-memory/local)
+  - [x] Unit tests for vector insertion, search, and namespace filtering in `tests/test_vector_store.py`
 - [ ] **Phase 1.4: Database Migrations & Postgres Support**
   - [ ] Set up Alembic migration scaffolding
   - [ ] Implement Postgres + pgvector connection support in `src/memlayer/store/postgres.py`
