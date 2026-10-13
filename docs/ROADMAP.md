@@ -26,11 +26,11 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
 - [x] **Phase 1.1: Core Data Contracts & Schemas**
   - [x] Implement `src/memlayer/models.py` with Pydantic v2 schemas (`Episode`, `MemoryItem`, `MemoryStatus`, `MemoryMetadata`)
   - [x] Unit tests for model validation, serialization, and edge cases in `tests/test_models.py`
-- [ ] **Phase 1.2: Relational Store & Episode Logging (SQLite / SQLAlchemy 2.0)**
-  - [ ] Implement `src/memlayer/store/sql.py` (SQLAlchemy 2.0 declarative models & repository)
-  - [ ] Implement `src/memlayer/store/episodes.py` (Episode logger with provenance tracking)
-  - [ ] Enforce strict per-user isolation (`user_id` filtering on all operations)
-  - [ ] Unit tests for CRUD and multi-user isolation in `tests/test_sql_store.py`
+- [x] **Phase 1.2: Relational Store & Episode Logging (SQLite / SQLAlchemy 2.0)**
+  - [x] Implement `src/memlayer/store/sql.py` (SQLAlchemy 2.0 declarative models & repository)
+  - [x] Implement `src/memlayer/store/episodes.py` (Episode logger with provenance tracking)
+  - [x] Enforce strict per-user isolation (`user_id` filtering on all operations)
+  - [x] Unit tests for CRUD and multi-user isolation in `tests/test_sql_store.py`
 - [ ] **Phase 1.3: Embeddings & Vector Store Adapter (Abstract + Local)**
   - [ ] Implement embedder abstraction in `src/memlayer/llm/embedder.py` (LiteLLM / sentence-transformers)
   - [ ] Implement vector store interface in `src/memlayer/store/vector_base.py`
