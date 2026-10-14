@@ -221,10 +221,12 @@ class TestMemoryLayerWritePipeline:
         await mem.close()
 
     @pytest.mark.asyncio
-    async def test_search_not_implemented_milestone_3(self) -> None:
+    async def test_search_public_api_basic(self) -> None:
         mem = await MemoryLayer.create_local(vector_dim=16)
 
-        with pytest.raises(NotImplementedError, match="Milestone 3"):
-            await mem.search("user_1", "test query")
+        res = await mem.search("user_1", "What is my project?")
+        assert res.skipped is False
+        assert res.memories == []
+        assert res.context == ""
 
         await mem.close()
