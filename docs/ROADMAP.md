@@ -48,11 +48,11 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
   - [x] Implement extractor engine in `src/memlayer/extract/extractor.py` (LiteLLM)
   - [x] Structured JSON validation with automatic retry on malformed outputs
   - [x] Fixed conversation fixtures and tests in `tests/test_extractor.py`
-- [ ] **Phase 2.2: Public Write API & Asynchronous Execution**
-  - [ ] Define `MemoryLayer` class in `src/memlayer/api.py`
-  - [ ] Implement `MemoryLayer.add(user_id, messages)`
-  - [ ] Async background processing for extraction and vector indexing
-  - [ ] Write path integration tests in `tests/test_write_pipeline.py`
+- [x] **Phase 2.2: Public Write API & Asynchronous Execution**
+  - [x] Define `MemoryLayer` class in `src/memlayer/api.py`
+  - [x] Implement `MemoryLayer.add(user_id, messages)`
+  - [x] Async background processing for extraction and vector indexing
+  - [x] Write path integration tests in `tests/test_write_pipeline.py`
 
 ---
 
