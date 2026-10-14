@@ -62,10 +62,10 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
   - [x] Implement Reciprocal Rank Fusion (RRF) for semantic + keyword merging
   - [x] Filter out superseded memories by default
   - [x] Unit tests in `tests/test_hybrid_retrieval.py`
-- [ ] **Phase 3.2: Multi-Factor Scoring Engine**
-  - [ ] Implement scoring formula in `src/memlayer/retrieve/scoring.py`: `score = a * sim + b * exp(-age/tau) + c * importance`
-  - [ ] Configurable hyperparameters (`a`, `b`, `c`, `tau`)
-  - [ ] Mathematical unit tests for age decay and boundary conditions in `tests/test_scoring.py`
+- [x] **Phase 3.2: Multi-Factor Scoring Engine**
+  - [x] Implement scoring formula in `src/memlayer/retrieve/scoring.py`: `score = a * sim + b * exp(-age/tau) + c * importance`
+  - [x] Configurable hyperparameters (`a`, `b`, `c`, `tau`)
+  - [x] Mathematical unit tests for age decay and boundary conditions in `tests/test_scoring.py`
 - [ ] **Phase 3.3: Retrieval Router (Turn Gating)**
   - [ ] Implement query classification in `src/memlayer/retrieve/router.py` to skip retrieval on trivial turns
   - [ ] Router tests in `tests/test_router.py`
