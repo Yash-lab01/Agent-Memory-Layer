@@ -66,13 +66,13 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
   - [x] Implement scoring formula in `src/memlayer/retrieve/scoring.py`: `score = a * sim + b * exp(-age/tau) + c * importance`
   - [x] Configurable hyperparameters (`a`, `b`, `c`, `tau`)
   - [x] Mathematical unit tests for age decay and boundary conditions in `tests/test_scoring.py`
-- [ ] **Phase 3.3: Retrieval Router (Turn Gating)**
-  - [ ] Implement query classification in `src/memlayer/retrieve/router.py` to skip retrieval on trivial turns
-  - [ ] Router tests in `tests/test_router.py`
-- [ ] **Phase 3.4: Context Formatter & Public Search API**
-  - [ ] Implement `src/memlayer/retrieve/format.py` (timestamp formatting, provenance tags, token budgeting)
-  - [ ] Implement `MemoryLayer.search(user_id, query, token_budget)` in `src/memlayer/api.py`
-  - [ ] Search API tests in `tests/test_search_api.py`
+- [x] **Phase 3.3: Retrieval Router (Turn Gating)**
+  - [x] Implement query classification in `src/memlayer/retrieve/router.py` to skip retrieval on trivial turns
+  - [x] Router tests in `tests/test_router.py`
+- [x] **Phase 3.4: Context Formatter & Public Search API**
+  - [x] Implement `src/memlayer/retrieve/format.py` (timestamp formatting, provenance tags, token budgeting)
+  - [x] Implement `MemoryLayer.search(user_id, query, token_budget)` in `src/memlayer/api.py`
+  - [x] Search API tests in `tests/test_search_api.py`
 
 ---
 
