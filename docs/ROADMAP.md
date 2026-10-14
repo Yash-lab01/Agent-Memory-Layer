@@ -43,11 +43,11 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
 ---
 
 ## Milestone 2: Memory Write Path (Extraction & Ingestion)
-- [ ] **Phase 2.1: Extraction Prompt & Pydantic JSON Validator**
-  - [ ] Design extraction prompt in `src/memlayer/extract/prompts.py`
-  - [ ] Implement extractor engine in `src/memlayer/extract/extractor.py` (LiteLLM)
-  - [ ] Structured JSON validation with automatic retry on malformed outputs
-  - [ ] Fixed conversation fixtures and tests in `tests/test_extractor.py`
+- [x] **Phase 2.1: Extraction Prompt & Pydantic JSON Validator**
+  - [x] Design extraction prompt in `src/memlayer/extract/prompts.py`
+  - [x] Implement extractor engine in `src/memlayer/extract/extractor.py` (LiteLLM)
+  - [x] Structured JSON validation with automatic retry on malformed outputs
+  - [x] Fixed conversation fixtures and tests in `tests/test_extractor.py`
 - [ ] **Phase 2.2: Public Write API & Asynchronous Execution**
   - [ ] Define `MemoryLayer` class in `src/memlayer/api.py`
   - [ ] Implement `MemoryLayer.add(user_id, messages)`
