@@ -3,6 +3,7 @@
 A modular, durable long-term memory library for conversational AI agents.
 """
 
+from memlayer.api import MemoryLayer
 from memlayer.models import (
     Episode,
     ExtractedFact,
@@ -19,6 +20,7 @@ __all__ = [
     "ExtractedFact",
     "ExtractionResult",
     "MemoryItem",
+    "MemoryLayer",
     "MemoryStatus",
     "Role",
     "ScoredMemory",
