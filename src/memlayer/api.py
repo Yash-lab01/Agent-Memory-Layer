@@ -13,6 +13,10 @@ from typing import Any, Literal, overload
 from memlayer.extract.extractor import FactExtractor
 from memlayer.llm.embedder import BaseEmbedder, MockEmbedder
 from memlayer.models import Episode, MemoryItem, MemoryStatus, SearchResult
+from memlayer.retrieve.format import format_context
+from memlayer.retrieve.hybrid import HybridRetriever
+from memlayer.retrieve.router import RetrievalRouter
+from memlayer.retrieve.scoring import ScoringWeights, rank_memories
 from memlayer.store.episodes import EpisodeStore
 from memlayer.store.sql import SQLStore
 from memlayer.store.vector import QdrantVectorStore
@@ -33,6 +37,9 @@ class MemoryLayer:
         embedder: BaseEmbedder,
         extractor: FactExtractor | None = None,
         episode_logger: EpisodeStore | None = None,
+        router: RetrievalRouter | None = None,
+        retriever: HybridRetriever | None = None,
+        scoring_weights: ScoringWeights | None = None,
     ) -> None:
         """Initialize MemoryLayer with explicit storage and model backends."""
         self.store = store
@@ -40,6 +47,13 @@ class MemoryLayer:
         self.embedder = embedder
         self.extractor = extractor or FactExtractor()
         self.episode_logger = episode_logger or EpisodeStore(store)
+        self.router = router or RetrievalRouter()
+        self.retriever = retriever or HybridRetriever(
+            store=store,
+            vector_store=vector_store,
+            embedder=embedder,
+        )
+        self.scoring_weights = scoring_weights or ScoringWeights()
 
     @classmethod
     async def create_local(
@@ -48,6 +62,8 @@ class MemoryLayer:
         vector_dim: int = 64,
         embedder: BaseEmbedder | None = None,
         extractor: FactExtractor | None = None,
+        router: RetrievalRouter | None = None,
+        scoring_weights: ScoringWeights | None = None,
     ) -> MemoryLayer:
         """Create a self-contained in-memory MemoryLayer instance for testing and local usage."""
         store = SQLStore(db_url=db_url)
@@ -67,6 +83,8 @@ class MemoryLayer:
             vector_store=vector_store,
             embedder=actual_embedder,
             extractor=extractor or FactExtractor(),
+            router=router,
+            scoring_weights=scoring_weights,
         )
 
     # -------------------------------------------------------------------------
@@ -213,13 +231,78 @@ class MemoryLayer:
     async def search(
         self,
         user_id: str,
-        _query: str,
-        _limit: int = 10,
-    ) -> list[SearchResult]:
-        """Retrieve memories relevant to query (implemented in Milestone 3)."""
+        query: str,
+        limit: int = 10,
+        token_budget: int | None = None,
+        bypass_router: bool = False,
+        status: MemoryStatus | None = MemoryStatus.ACTIVE,
+    ) -> SearchResult:
+        """Search memories relevant to query within an optional token budget.
+
+        Args:
+            user_id: Unique user identifier for strict isolation.
+            query: The user query string.
+            limit: Maximum number of memories to retrieve.
+            token_budget: Maximum tokens allowed for formatted prompt context.
+            bypass_router: If True, forces retrieval even on trivial turns.
+            status: Optional memory status filter (default: ACTIVE).
+
+        Returns:
+            SearchResult with formatted context string, scored memories, token count, and skipped status.
+        """
         if not user_id or not user_id.strip():
             raise ValueError("user_id must be a non-empty string.")
-        raise NotImplementedError("search() will be fully implemented in Milestone 3 (Phase 3.1).")
+        clean_user_id = user_id.strip()
+
+        # Step 1: Retrieval Router Turn Gating
+        if not bypass_router and not self.router.should_retrieve(query):
+            return SearchResult(
+                context="",
+                memories=[],
+                token_count=0,
+                skipped=True,
+            )
+
+        # Step 2: Hybrid Retrieval (Dense Vector + Sparse BM25)
+        matches = await self.retriever.search(
+            user_id=clean_user_id,
+            query=query,
+            limit=limit,
+            status=status,
+        )
+
+        if not matches:
+            return SearchResult(
+                context="",
+                memories=[],
+                token_count=0,
+                skipped=False,
+            )
+
+        # Step 3: Multi-Factor Scoring (Similarity + Recency Decay + Importance)
+        candidates = [(m.memory, m.combined_score) for m in matches]
+        scored_memories = rank_memories(
+            candidates,
+            weights=self.scoring_weights,
+            limit=limit,
+        )
+
+        # Step 4: Context Formatting and Token Budget Packing
+        context_str, included_memories, token_count = format_context(
+            scored_memories,
+            token_budget=token_budget,
+        )
+
+        # Step 5: Record Access Telemetry
+        for sm in included_memories:
+            asyncio.create_task(self.store.record_access(clean_user_id, sm.memory.id))
+
+        return SearchResult(
+            context=context_str,
+            memories=included_memories,
+            token_count=token_count,
+            skipped=False,
+        )
 
     # -------------------------------------------------------------------------
     # Deletion: Privacy & Forget API
