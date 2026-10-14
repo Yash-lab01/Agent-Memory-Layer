@@ -57,11 +57,11 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
 ---
 
 ## Milestone 3: Memory Read Path (Hybrid Retrieval & Scoring)
-- [ ] **Phase 3.1: Hybrid Retrieval Engine (Semantic + BM25)**
-  - [ ] Implement BM25 keyword search in `src/memlayer/retrieve/hybrid.py`
-  - [ ] Implement Reciprocal Rank Fusion (RRF) for semantic + keyword merging
-  - [ ] Filter out superseded memories by default
-  - [ ] Unit tests in `tests/test_hybrid_retrieval.py`
+- [x] **Phase 3.1: Hybrid Retrieval Engine (Semantic + BM25)**
+  - [x] Implement BM25 keyword search in `src/memlayer/retrieve/hybrid.py`
+  - [x] Implement Reciprocal Rank Fusion (RRF) for semantic + keyword merging
+  - [x] Filter out superseded memories by default
+  - [x] Unit tests in `tests/test_hybrid_retrieval.py`
 - [ ] **Phase 3.2: Multi-Factor Scoring Engine**
   - [ ] Implement scoring formula in `src/memlayer/retrieve/scoring.py`: `score = a * sim + b * exp(-age/tau) + c * importance`
   - [ ] Configurable hyperparameters (`a`, `b`, `c`, `tau`)
