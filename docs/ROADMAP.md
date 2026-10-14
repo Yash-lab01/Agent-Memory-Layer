@@ -36,9 +36,9 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
   - [x] Implement vector store interface in `src/memlayer/store/vector_base.py`
   - [x] Implement local vector adapter in `src/memlayer/store/vector.py` (Qdrant in-memory/local)
   - [x] Unit tests for vector insertion, search, and namespace filtering in `tests/test_vector_store.py`
-- [ ] **Phase 1.4: Database Migrations & Postgres Support**
-  - [ ] Set up Alembic migration scaffolding
-  - [ ] Implement Postgres + pgvector connection support in `src/memlayer/store/postgres.py`
+- [x] **Phase 1.4: Database Migrations & Postgres Support**
+  - [x] Set up Alembic migration scaffolding
+  - [x] Implement Postgres + pgvector connection support in `src/memlayer/store/postgres.py`
 
 ---
 
