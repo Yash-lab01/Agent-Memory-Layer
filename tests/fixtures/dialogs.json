@@ -1,0 +1,46 @@
+[
+  {
+    "id": "dialog_location_career",
+    "description": "User shares location and career targets",
+    "messages": [
+      {"role": "user", "content": "Hi, I currently live in Pune and I am preparing for conversational AI systems engineering roles."},
+      {"role": "assistant", "content": "That is a great focus! Pune has a growing AI ecosystem."}
+    ],
+    "expected_facts": [
+      {"content": "User lives in Pune", "entity": "User", "min_importance": 0.7},
+      {"content": "User is targeting conversational AI engineering roles", "entity": "User", "min_importance": 0.7}
+    ]
+  },
+  {
+    "id": "dialog_tech_preferences",
+    "description": "User states technical preferences",
+    "messages": [
+      {"role": "user", "content": "I prefer using Python and FastAPI for backend development, and SQLite for local prototyping."},
+      {"role": "assistant", "content": "FastAPI and SQLite make a great lightweight stack."}
+    ],
+    "expected_facts": [
+      {"content": "User prefers Python and FastAPI for backend development", "entity": "User", "min_importance": 0.5},
+      {"content": "User prefers SQLite for local prototyping", "entity": "User", "min_importance": 0.5}
+    ]
+  },
+  {
+    "id": "dialog_chitchat_empty",
+    "description": "Casual greeting without persistent facts",
+    "messages": [
+      {"role": "user", "content": "Good morning! Thanks for the help earlier."},
+      {"role": "assistant", "content": "Good morning! You are welcome, let me know if you need anything else."}
+    ],
+    "expected_facts": []
+  },
+  {
+    "id": "dialog_temporal_update",
+    "description": "User mentions temporal event",
+    "messages": [
+      {"role": "user", "content": "Last year in 2025, I completed my degree in Computer Science."},
+      {"role": "assistant", "content": "Congratulations on completing your Computer Science degree!"}
+    ],
+    "expected_facts": [
+      {"content": "User completed a degree in Computer Science in 2025", "entity": "User", "min_importance": 0.7}
+    ]
+  }
+]
