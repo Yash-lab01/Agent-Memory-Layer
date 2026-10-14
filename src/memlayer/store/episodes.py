@@ -72,3 +72,7 @@ class EpisodeStore:
     async def get_episode(self, user_id: str, episode_id: str) -> Episode | None:
         """Fetch a single episode by ID with user ownership check."""
         return await self.sql_store.get_episode(user_id=user_id, episode_id=episode_id)
+
+
+# Alias for compatibility with PRD and public specifications
+EpisodeLogger = EpisodeStore

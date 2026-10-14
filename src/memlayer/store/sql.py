@@ -350,3 +350,7 @@ class SQLStore:
                 stmt_ep = delete(EpisodeRow).where(EpisodeRow.user_id == user_id_clean)
                 res_ep = cast(CursorResult[Any], await session.execute(stmt_ep))
                 return int((res_mem.rowcount or 0) + (res_ep.rowcount or 0))
+
+
+# Alias for compatibility with PRD and public specifications
+SQLMemoryStore = SQLStore
