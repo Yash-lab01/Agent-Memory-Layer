@@ -327,6 +327,32 @@ class SQLStore:
                 cursor_res = cast(CursorResult[Any], result)
                 return bool(cursor_res.rowcount > 0)
 
+    async def update_memory_importance(
+        self,
+        user_id: str,
+        memory_id: str,
+        importance: float,
+    ) -> bool:
+        """Update the stored importance score of a specific memory record.
+
+        Verifies that the target memory belongs strictly to user_id.
+        """
+        user_id_clean = user_id.strip()
+        clamped_importance = max(0.0, min(1.0, float(importance)))
+        async with self.session_factory() as session:
+            async with session.begin():
+                stmt = (
+                    update(MemoryRow)
+                    .where(
+                        MemoryRow.user_id == user_id_clean,
+                        MemoryRow.id == memory_id,
+                    )
+                    .values(importance=clamped_importance)
+                )
+                result = await session.execute(stmt)
+                cursor_res = cast(CursorResult[Any], result)
+                return bool(cursor_res.rowcount > 0)
+
     async def delete_memory(self, user_id: str, memory_id: str) -> bool:
         """Explicitly delete a memory record (for GDPR/forget API)."""
         user_id_clean = user_id.strip()
