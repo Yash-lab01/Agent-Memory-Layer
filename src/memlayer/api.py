@@ -10,6 +10,9 @@ import asyncio
 from collections.abc import Sequence
 from typing import Any, Literal, overload
 
+from memlayer.consolidate.decay import MemoryDecayEngine
+from memlayer.consolidate.dedup import DeduplicationEngine
+from memlayer.consolidate.worker import ConsolidationWorker
 from memlayer.extract.extractor import FactExtractor
 from memlayer.llm.embedder import BaseEmbedder, MockEmbedder
 from memlayer.models import Episode, MemoryItem, MemoryStatus, SearchResult
@@ -54,6 +57,7 @@ class MemoryLayer:
             embedder=embedder,
         )
         self.scoring_weights = scoring_weights or ScoringWeights()
+        self._worker: ConsolidationWorker | None = None
 
     @classmethod
     async def create_local(
@@ -328,7 +332,48 @@ class MemoryLayer:
         await self.vector_store.delete_user_vectors(clean_user_id)
         return sql_count
 
+    # -------------------------------------------------------------------------
+    # Consolidation: Background Worker Management
+    # -------------------------------------------------------------------------
+
+    def start_consolidation_worker(
+        self,
+        dedup_interval_minutes: float = 360.0,
+        decay_interval_minutes: float = 1440.0,
+    ) -> ConsolidationWorker:
+        """Initialize and start the background consolidation worker."""
+        if self._worker is None:
+            dedup_engine = DeduplicationEngine(
+                store=self.store,
+                vector_store=self.vector_store,
+                embedder=self.embedder,
+            )
+            decay_engine = MemoryDecayEngine(
+                store=self.store,
+                vector_store=self.vector_store,
+                embedder=self.embedder,
+            )
+            self._worker = ConsolidationWorker(
+                store=self.store,
+                dedup_engine=dedup_engine,
+                decay_engine=decay_engine,
+                dedup_interval_minutes=dedup_interval_minutes,
+                decay_interval_minutes=decay_interval_minutes,
+            )
+
+        if not self._worker.is_running:
+            self._worker.start()
+
+        return self._worker
+
+    def stop_consolidation_worker(self) -> None:
+        """Stop active background consolidation worker if running."""
+        if self._worker is not None and self._worker.is_running:
+            self._worker.stop(wait=False)
+
     async def close(self) -> None:
-        """Close database engine and vector store connections."""
+        """Close database engine, vector store, and background worker."""
+        if self._worker is not None and self._worker.is_running:
+            self._worker.stop(wait=False)
         await self.store.close()
         await self.vector_store.close()
