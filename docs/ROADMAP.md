@@ -77,11 +77,11 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
 ---
 
 ## Milestone 4: Memory Consolidation & Lifecycle Management
-- [ ] **Phase 4.1: Contradiction & Supersession Engine (Test-Driven)**
-  - [ ] Create curated contradiction test fixtures in `tests/fixtures/contradictions.json`
-  - [ ] Implement conflict detection in `src/memlayer/consolidate/conflicts.py`
-  - [ ] Mark outdated memories as `superseded` with `superseded_by` pointer (never hard-delete)
-  - [ ] Contradiction unit tests in `tests/test_conflicts.py`
+- [x] **Phase 4.1: Contradiction & Supersession Engine (Test-Driven)**
+  - [x] Create curated contradiction test fixtures in `tests/fixtures/contradictions.json`
+  - [x] Implement conflict detection in `src/memlayer/consolidate/conflicts.py`
+  - [x] Mark outdated memories as `superseded` with `superseded_by` pointer (never hard-delete)
+  - [x] Contradiction unit tests in `tests/test_conflicts.py`
 - [ ] **Phase 4.2: Deduplication Engine**
   - [ ] Implement near-duplicate fact merging in `src/memlayer/consolidate/dedup.py`
   - [ ] Dedup tests in `tests/test_dedup.py`
