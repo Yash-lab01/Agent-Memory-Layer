@@ -1,0 +1,82 @@
+[
+  {
+    "case_id": "location_update",
+    "old_fact": "User lives in Pune",
+    "new_fact": "User relocated to Bangalore",
+    "entity": "Location",
+    "is_contradiction": true,
+    "description": "City residence updated from Pune to Bangalore"
+  },
+  {
+    "case_id": "employer_update",
+    "old_fact": "User works as a software engineer at TechStartup Inc",
+    "new_fact": "User accepted a new position at Google DeepMind",
+    "entity": "Career",
+    "is_contradiction": true,
+    "description": "Primary employer updated from TechStartup Inc to Google DeepMind"
+  },
+  {
+    "case_id": "dietary_negation",
+    "old_fact": "User frequently eats seafood and sushi",
+    "new_fact": "User developed an allergy to shellfish and no longer eats seafood",
+    "entity": "Diet",
+    "is_contradiction": true,
+    "description": "Dietary habit explicitly negated by shellfish allergy"
+  },
+  {
+    "case_id": "primary_tool_switch",
+    "old_fact": "User uses VS Code as their primary code editor",
+    "new_fact": "User switched to Cursor as their primary code editor",
+    "entity": "Tools",
+    "is_contradiction": true,
+    "description": "Primary IDE choice superseded"
+  },
+  {
+    "case_id": "marital_status_update",
+    "old_fact": "User is single",
+    "new_fact": "User got married last month",
+    "entity": "Personal",
+    "is_contradiction": true,
+    "description": "Marital status transitioned from single to married"
+  },
+  {
+    "case_id": "job_title_promotion",
+    "old_fact": "User holds the title of Senior Software Engineer",
+    "new_fact": "User was promoted to Staff Software Engineer",
+    "entity": "Career",
+    "is_contradiction": true,
+    "description": "Professional title superseded by promotion"
+  },
+  {
+    "case_id": "coexisting_beverages",
+    "old_fact": "User enjoys drinking black coffee in the morning",
+    "new_fact": "User likes sipping chamomile tea before bed",
+    "entity": "Diet",
+    "is_contradiction": false,
+    "description": "Different beverage preferences for different times of day coexist"
+  },
+  {
+    "case_id": "multiple_pets",
+    "old_fact": "User owns a golden retriever dog named Max",
+    "new_fact": "User adopted a rescue ginger cat named Oliver",
+    "entity": "Pets",
+    "is_contradiction": false,
+    "description": "Adopting a cat does not contradict or supersede owning a dog"
+  },
+  {
+    "case_id": "multiple_hobbies",
+    "old_fact": "User plays tennis on Saturday mornings",
+    "new_fact": "User started taking piano lessons on Sundays",
+    "entity": "Hobbies",
+    "is_contradiction": false,
+    "description": "Weekend sports and musical hobbies can coexist"
+  },
+  {
+    "case_id": "multiple_languages",
+    "old_fact": "User is fluent in English and Hindi",
+    "new_fact": "User is learning conversational Spanish",
+    "entity": "Languages",
+    "is_contradiction": false,
+    "description": "Learning a third language complements existing fluency"
+  }
+]
