@@ -82,9 +82,9 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
   - [x] Implement conflict detection in `src/memlayer/consolidate/conflicts.py`
   - [x] Mark outdated memories as `superseded` with `superseded_by` pointer (never hard-delete)
   - [x] Contradiction unit tests in `tests/test_conflicts.py`
-- [ ] **Phase 4.2: Deduplication Engine**
-  - [ ] Implement near-duplicate fact merging in `src/memlayer/consolidate/dedup.py`
-  - [ ] Dedup tests in `tests/test_dedup.py`
+- [x] **Phase 4.2: Deduplication Engine**
+  - [x] Implement near-duplicate fact merging in `src/memlayer/consolidate/dedup.py`
+  - [x] Dedup tests in `tests/test_dedup.py`
 - [ ] **Phase 4.3: Memory Decay & Explicit Forgetting**
   - [ ] Implement retrieval-frequency decay in `src/memlayer/consolidate/decay.py`
   - [ ] Implement `MemoryLayer.forget(user_id, memory_id)` in `src/memlayer/api.py`
