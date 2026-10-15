@@ -273,6 +273,13 @@ class SQLStore:
             mem_rows = result.scalars().all()
             return [row.to_pydantic() for row in mem_rows]
 
+    async def list_user_ids(self) -> list[str]:
+        """List distinct user IDs present in the memories store."""
+        async with self.session_factory() as session:
+            stmt = select(MemoryRow.user_id).distinct()
+            result = await session.execute(stmt)
+            return [str(uid) for uid in result.scalars().all() if uid]
+
     async def mark_superseded(
         self,
         user_id: str,
