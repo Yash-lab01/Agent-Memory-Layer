@@ -89,9 +89,9 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
   - [x] Implement retrieval-frequency decay in `src/memlayer/consolidate/decay.py`
   - [x] Implement `MemoryLayer.forget(user_id, memory_id)` in `src/memlayer/api.py`
   - [x] Decay and explicit forget tests in `tests/test_decay.py`
-- [ ] **Phase 4.4: Background Consolidation Worker**
-  - [ ] Implement `APScheduler` background worker in `src/memlayer/consolidate/worker.py`
-  - [ ] Background worker lifecycle tests in `tests/test_worker.py`
+- [x] **Phase 4.4: Background Consolidation Worker**
+  - [x] Implement `APScheduler` background worker in `src/memlayer/consolidate/worker.py`
+  - [x] Background worker lifecycle tests in `tests/test_worker.py`
 
 ---
 
