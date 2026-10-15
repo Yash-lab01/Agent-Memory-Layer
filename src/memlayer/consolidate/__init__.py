@@ -18,18 +18,24 @@ from memlayer.consolidate.dedup import (
     DedupVerificationResult,
     DuplicatePair,
 )
+from memlayer.consolidate.worker import (
+    ConsolidationWorker,
+    FullConsolidationResult,
+)
 
 __all__ = [
     "ConflictDetectionResult",
     "ConflictDetector",
     "ConflictItem",
     "ConflictResolutionResult",
+    "ConsolidationWorker",
     "DecayItemResult",
     "DecayResult",
     "DedupResult",
     "DedupVerificationResult",
     "DeduplicationEngine",
     "DuplicatePair",
+    "FullConsolidationResult",
     "MemoryDecayEngine",
     "calculate_decayed_importance",
 ]
