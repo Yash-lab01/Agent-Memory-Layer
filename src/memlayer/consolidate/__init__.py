@@ -6,6 +6,12 @@ from memlayer.consolidate.conflicts import (
     ConflictItem,
     ConflictResolutionResult,
 )
+from memlayer.consolidate.decay import (
+    DecayItemResult,
+    DecayResult,
+    MemoryDecayEngine,
+    calculate_decayed_importance,
+)
 from memlayer.consolidate.dedup import (
     DeduplicationEngine,
     DedupResult,
@@ -18,8 +24,12 @@ __all__ = [
     "ConflictDetector",
     "ConflictItem",
     "ConflictResolutionResult",
+    "DecayItemResult",
+    "DecayResult",
     "DedupResult",
     "DedupVerificationResult",
     "DeduplicationEngine",
     "DuplicatePair",
+    "MemoryDecayEngine",
+    "calculate_decayed_importance",
 ]
