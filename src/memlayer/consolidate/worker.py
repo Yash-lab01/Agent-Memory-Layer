@@ -52,12 +52,15 @@ class ConsolidationWorker:
     @property
     def is_running(self) -> bool:
         """Return True if background scheduler is active and running."""
-        return bool(self._scheduler and self._scheduler.running)
+        return bool(self._is_started and self._scheduler and self._scheduler.running)
 
     def start(self) -> None:
         """Register scheduled jobs and start the background scheduler."""
         if self.is_running:
             return
+
+        # Fresh scheduler instance ensures clean state upon start or restart
+        self._scheduler = AsyncIOScheduler()
 
         self._scheduler.add_job(
             self.run_dedup,
@@ -84,9 +87,10 @@ class ConsolidationWorker:
 
     def stop(self, wait: bool = False) -> None:
         """Gracefully shutdown the scheduler."""
-        if self.is_running:
-            self._scheduler.shutdown(wait=wait)
+        if self._is_started:
             self._is_started = False
+            if self._scheduler and self._scheduler.running:
+                self._scheduler.shutdown(wait=wait)
             logger.info("ConsolidationWorker stopped.")
 
     def pause(self) -> None:
