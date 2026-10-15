@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 from pydantic import BaseModel, Field
 
 from memlayer.llm.embedder import BaseEmbedder
-from memlayer.models import MemoryItem, MemoryStatus
+from memlayer.models import MemoryStatus
 from memlayer.store.sql import SQLStore
 from memlayer.store.vector_base import VectorPoint, VectorStoreBase
 
@@ -162,9 +162,7 @@ class MemoryDecayEngine:
                 beta=self.beta,
             )
 
-            should_prune = (
-                new_importance < self.prune_threshold and elapsed_days >= neglect_cutoff
-            )
+            should_prune = new_importance < self.prune_threshold and elapsed_days >= neglect_cutoff
 
             if should_prune:
                 # Soft prune: Transition status to SUPERSEDED with marker pointer
@@ -181,9 +179,7 @@ class MemoryDecayEngine:
                     "entity": mem.entity,
                     "importance": new_importance,
                     "created_at": mem.created_at.isoformat(),
-                    "event_time": (
-                        mem.event_time.isoformat() if mem.event_time else None
-                    ),
+                    "event_time": (mem.event_time.isoformat() if mem.event_time else None),
                     "status": MemoryStatus.SUPERSEDED.value,
                     "superseded_by": "pruned_decay",
                 }
@@ -219,9 +215,7 @@ class MemoryDecayEngine:
                     "entity": mem.entity,
                     "importance": new_importance,
                     "created_at": mem.created_at.isoformat(),
-                    "event_time": (
-                        mem.event_time.isoformat() if mem.event_time else None
-                    ),
+                    "event_time": (mem.event_time.isoformat() if mem.event_time else None),
                     "status": MemoryStatus.ACTIVE.value,
                     "superseded_by": None,
                 }
