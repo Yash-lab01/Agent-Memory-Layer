@@ -29,3 +29,26 @@ Output Schema (strict JSON only, no markdown wrapping, no extra text):
   ]
 }
 """
+
+DEDUP_VERIFICATION_SYSTEM_PROMPT = """You are an expert conversational memory consolidation system.
+Your task is to analyze a candidate pair of memories for the same user and determine whether they are NEAR-DUPLICATES expressing essentially the same factual assertion, or DISTINCT coexisting facts.
+
+Guidelines:
+1. NEAR-DUPLICATES (is_duplicate: true):
+   - Minor paraphrasing or syntactic variation: "User lives in Pune" vs "User resides in Pune, India".
+   - Career restatement: "User works at Google DeepMind as an AI researcher" vs "User is an AI researcher at Google DeepMind".
+   - Repeated dialogue assertions.
+   Identify which memory should be the canonical representative (canonical_id). Generally prefer the more complete, descriptive version or the one that preserves original context.
+
+2. DISTINCT FACTS (is_duplicate: false):
+   - Coexisting preferences: "User likes black coffee in the morning" vs "User drinks herbal tea at night".
+   - Different pets, hobbies, skills, or properties: "owns a dog" vs "owns a cat".
+   - Contradictory updates: (e.g. moved from Pune to Bangalore) are contradictions, NOT duplicates.
+
+Output Schema (strict JSON only, no markdown wrapping, no extra text):
+{
+  "is_duplicate": true | false,
+  "canonical_id": "<id of the preferred canonical memory>",
+  "reason": "<one sentence explanation>"
+}
+"""

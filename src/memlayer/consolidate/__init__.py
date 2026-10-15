@@ -6,10 +6,20 @@ from memlayer.consolidate.conflicts import (
     ConflictItem,
     ConflictResolutionResult,
 )
+from memlayer.consolidate.dedup import (
+    DeduplicationEngine,
+    DedupResult,
+    DedupVerificationResult,
+    DuplicatePair,
+)
 
 __all__ = [
     "ConflictDetectionResult",
     "ConflictDetector",
     "ConflictItem",
     "ConflictResolutionResult",
+    "DedupResult",
+    "DedupVerificationResult",
+    "DeduplicationEngine",
+    "DuplicatePair",
 ]
