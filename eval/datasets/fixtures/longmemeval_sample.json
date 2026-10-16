@@ -1,0 +1,156 @@
+[
+  {
+    "id": "lme-ku-001",
+    "benchmark": "longmemeval",
+    "category": "knowledge_update",
+    "user_id": "eval_user_lme_1",
+    "split": "dev",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "Hey, I just moved to Seattle for my new job as an engineer at CloudTech.",
+        "timestamp": "2026-01-10T10:00:00Z",
+        "session_id": "sess-01"
+      },
+      {
+        "role": "assistant",
+        "content": "Congratulations on the move and your new role at CloudTech in Seattle!",
+        "timestamp": "2026-01-10T10:00:05Z",
+        "session_id": "sess-01"
+      },
+      {
+        "role": "user",
+        "content": "Update: Seattle was too rainy for me, so last week I relocated to Austin, Texas.",
+        "timestamp": "2026-03-15T14:30:00Z",
+        "session_id": "sess-02"
+      },
+      {
+        "role": "assistant",
+        "content": "Austin is a great city with plenty of sunshine and music. Hope you enjoy settling into Texas!",
+        "timestamp": "2026-03-15T14:30:10Z",
+        "session_id": "sess-02"
+      }
+    ],
+    "question": "Which city do I currently live in?",
+    "ground_truth": "Austin, Texas (the user originally moved to Seattle, but relocated to Austin).",
+    "metadata": {
+      "superseded_value": "Seattle",
+      "current_value": "Austin, Texas"
+    }
+  },
+  {
+    "id": "lme-tr-002",
+    "benchmark": "longmemeval",
+    "category": "temporal_reasoning",
+    "user_id": "eval_user_lme_2",
+    "split": "dev",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "My dental surgery is scheduled for May 10, 2026.",
+        "timestamp": "2026-04-01T09:00:00Z",
+        "session_id": "sess-10"
+      },
+      {
+        "role": "assistant",
+        "content": "Noted! Dental surgery on May 10, 2026.",
+        "timestamp": "2026-04-01T09:00:04Z",
+        "session_id": "sess-10"
+      },
+      {
+        "role": "user",
+        "content": "I booked a vacation flight departing exactly 4 days after my dental surgery.",
+        "timestamp": "2026-04-12T16:00:00Z",
+        "session_id": "sess-11"
+      },
+      {
+        "role": "assistant",
+        "content": "Sounds relaxing! You'll be taking off on May 14, 2026.",
+        "timestamp": "2026-04-12T16:00:06Z",
+        "session_id": "sess-11"
+      }
+    ],
+    "question": "What date does my vacation flight depart?",
+    "ground_truth": "May 14, 2026 (4 days after the dental surgery on May 10, 2026).",
+    "metadata": {
+      "target_date": "2026-05-14"
+    }
+  },
+  {
+    "id": "lme-ms-003",
+    "benchmark": "longmemeval",
+    "category": "multi_session",
+    "user_id": "eval_user_lme_3",
+    "split": "dev",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "My all-time favorite novelist is Haruki Murakami, especially Norwegian Wood.",
+        "timestamp": "2026-02-01T11:00:00Z",
+        "session_id": "sess-21"
+      },
+      {
+        "role": "assistant",
+        "content": "Murakami's writing style in Norwegian Wood is unforgettable.",
+        "timestamp": "2026-02-01T11:00:05Z",
+        "session_id": "sess-21"
+      },
+      {
+        "role": "user",
+        "content": "Whenever I cook at home on weekends, my go-to comfort meal is spicy miso ramen.",
+        "timestamp": "2026-02-18T18:00:00Z",
+        "session_id": "sess-22"
+      },
+      {
+        "role": "assistant",
+        "content": "Spicy miso ramen is delicious comfort food for a weekend.",
+        "timestamp": "2026-02-18T18:00:08Z",
+        "session_id": "sess-22"
+      }
+    ],
+    "question": "Can you summarize both my favorite novelist and my go-to comfort meal?",
+    "ground_truth": "Favorite novelist is Haruki Murakami and comfort meal is spicy miso ramen.",
+    "metadata": {
+      "novelists": ["Haruki Murakami"],
+      "comfort_food": ["spicy miso ramen"]
+    }
+  },
+  {
+    "id": "lme-ab-004",
+    "benchmark": "longmemeval",
+    "category": "abstention",
+    "user_id": "eval_user_lme_4",
+    "split": "dev",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "I adopted a golden retriever named Rusty from the local shelter.",
+        "timestamp": "2026-01-20T12:00:00Z",
+        "session_id": "sess-31"
+      },
+      {
+        "role": "assistant",
+        "content": "Rusty sounds like a wonderful companion! Golden retrievers are very affectionate.",
+        "timestamp": "2026-01-20T12:00:05Z",
+        "session_id": "sess-31"
+      },
+      {
+        "role": "user",
+        "content": "Rusty loves going hiking with me on the mountain trails every Saturday.",
+        "timestamp": "2026-02-05T15:20:00Z",
+        "session_id": "sess-32"
+      },
+      {
+        "role": "assistant",
+        "content": "Mountain hikes are fantastic exercise for Rusty.",
+        "timestamp": "2026-02-05T15:20:06Z",
+        "session_id": "sess-32"
+      }
+    ],
+    "question": "What is the name of my pet cat?",
+    "ground_truth": "The user has not mentioned having a pet cat (only a dog / golden retriever named Rusty).",
+    "metadata": {
+      "should_abstain": true
+    }
+  }
+]

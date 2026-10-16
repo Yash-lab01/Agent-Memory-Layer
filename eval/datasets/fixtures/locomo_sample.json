@@ -1,0 +1,144 @@
+[
+  {
+    "id": "locomo-ku-001",
+    "benchmark": "locomo",
+    "category": "knowledge_update",
+    "user_id": "eval_user_locomo_1",
+    "split": "dev",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "My primary programming language for backend services is Go.",
+        "timestamp": "2026-01-05T08:00:00Z",
+        "session_id": "locomo-s01"
+      },
+      {
+        "role": "assistant",
+        "content": "Go is great for concurrent, high-throughput backend services.",
+        "timestamp": "2026-01-05T08:00:04Z",
+        "session_id": "locomo-s01"
+      },
+      {
+        "role": "user",
+        "content": "We migrated our architecture to Python and Rust, so Rust is now my primary backend language.",
+        "timestamp": "2026-02-20T11:00:00Z",
+        "session_id": "locomo-s02"
+      },
+      {
+        "role": "assistant",
+        "content": "Rust offers exceptional memory safety and performance.",
+        "timestamp": "2026-02-20T11:00:06Z",
+        "session_id": "locomo-s02"
+      }
+    ],
+    "question": "What is my primary backend programming language?",
+    "ground_truth": "Rust (previously used Go, but transitioned to Rust).",
+    "metadata": {
+      "superseded_value": "Go",
+      "current_value": "Rust"
+    }
+  },
+  {
+    "id": "locomo-tr-002",
+    "benchmark": "locomo",
+    "category": "temporal_reasoning",
+    "user_id": "eval_user_locomo_2",
+    "split": "dev",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "I started my new fitness challenge on March 1, 2026.",
+        "timestamp": "2026-03-01T07:00:00Z",
+        "session_id": "locomo-s10"
+      },
+      {
+        "role": "assistant",
+        "content": "Best of luck with your fitness challenge!",
+        "timestamp": "2026-03-01T07:00:03Z",
+        "session_id": "locomo-s10"
+      },
+      {
+        "role": "user",
+        "content": "The challenge will last exactly 30 days before my rest week begins.",
+        "timestamp": "2026-03-02T19:00:00Z",
+        "session_id": "locomo-s11"
+      },
+      {
+        "role": "assistant",
+        "content": "Got it, 30 continuous days of workout.",
+        "timestamp": "2026-03-02T19:00:05Z",
+        "session_id": "locomo-s11"
+      }
+    ],
+    "question": "On what date does my rest week start?",
+    "ground_truth": "March 31, 2026 (30 days starting March 1, 2026).",
+    "metadata": {
+      "target_date": "2026-03-31"
+    }
+  },
+  {
+    "id": "locomo-ms-003",
+    "benchmark": "locomo",
+    "category": "multi_session",
+    "user_id": "eval_user_locomo_3",
+    "split": "dev",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "I bought a 2024 Honda Civic sedan in pearl white.",
+        "timestamp": "2026-01-15T13:00:00Z",
+        "session_id": "locomo-s20"
+      },
+      {
+        "role": "assistant",
+        "content": "Pearl white is a sharp look for a 2024 Honda Civic.",
+        "timestamp": "2026-01-15T13:00:05Z",
+        "session_id": "locomo-s20"
+      },
+      {
+        "role": "user",
+        "content": "I replaced the standard tires with Michelin CrossClimate2 all-season tires.",
+        "timestamp": "2026-02-10T10:00:00Z",
+        "session_id": "locomo-s21"
+      },
+      {
+        "role": "assistant",
+        "content": "Michelin CrossClimate2 tires offer top-tier wet and light snow traction.",
+        "timestamp": "2026-02-10T10:00:07Z",
+        "session_id": "locomo-s21"
+      }
+    ],
+    "question": "What car do I own and what tires did I install on it?",
+    "ground_truth": "A 2024 Honda Civic sedan in pearl white with Michelin CrossClimate2 tires.",
+    "metadata": {
+      "vehicle": "2024 Honda Civic sedan",
+      "tires": "Michelin CrossClimate2"
+    }
+  },
+  {
+    "id": "locomo-ab-004",
+    "benchmark": "locomo",
+    "category": "abstention",
+    "user_id": "eval_user_locomo_4",
+    "split": "dev",
+    "conversation": [
+      {
+        "role": "user",
+        "content": "I am drinking an iced oat milk latte right now while reading on my porch.",
+        "timestamp": "2026-02-08T09:00:00Z",
+        "session_id": "locomo-s30"
+      },
+      {
+        "role": "assistant",
+        "content": "An iced oat milk latte on the porch sounds like a peaceful morning.",
+        "timestamp": "2026-02-08T09:00:04Z",
+        "session_id": "locomo-s30"
+      }
+    ],
+    "question": "What is my sibling's birthday?",
+    "ground_truth": "The user has never mentioned having a sibling or their birthday.",
+    "metadata": {
+      "should_abstain": true
+    }
+  }
+]
