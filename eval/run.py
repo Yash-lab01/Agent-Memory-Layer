@@ -233,6 +233,37 @@ async def main_async(args: argparse.Namespace) -> None:
         print(f"[eval] No questions found for benchmark='{args.benchmark}' split='{args.split}'")
         return
 
+    if args.ablation == "all":
+        from eval.ablation import run_ablation_suite
+
+        await run_ablation_suite(
+            questions=questions,
+            benchmark=args.benchmark,
+            model=args.model,
+            judge_model=args.judge_model,
+            cache=cache,
+            output_dir=output_dir,
+        )
+        return
+
+    if args.ablation != "none":
+        from eval.ablation import get_ablation_configs
+
+        configs = get_ablation_configs()
+        cfg = configs[args.ablation]
+        await run_single_baseline(
+            baseline_cls=MemLayerBaseline,
+            baseline_name=cfg["name"],
+            questions=questions,
+            benchmark=args.benchmark,
+            model=args.model,
+            judge_model=args.judge_model,
+            cache=cache,
+            output_dir=output_dir,
+            extra_baseline_kwargs=cfg["kwargs"],
+        )
+        return
+
     baseline_map: dict[str, type[BaseBaseline]] = {
         "full_context": FullContextBaseline,
         "naive_rag": NaiveRAGBaseline,
@@ -265,6 +296,19 @@ def main() -> None:
         choices=["full_context", "naive_rag", "memlayer", "all"],
         default="memlayer",
         help="Baseline agent architecture to evaluate.",
+    )
+    parser.add_argument(
+        "--ablation",
+        choices=[
+            "none",
+            "without_decay",
+            "without_supersession",
+            "vector_only",
+            "without_recency",
+            "all",
+        ],
+        default="none",
+        help="Run systematic ablation studies on MemLayer.",
     )
     parser.add_argument(
         "--benchmark",
