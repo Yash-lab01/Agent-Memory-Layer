@@ -96,15 +96,16 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
 ---
 
 ## Milestone 5: Benchmark Evaluation Harness & Ablation Studies
-- [ ] **Phase 5.1: Benchmark Dataset Loaders & Splits**
-  - [ ] Dataset loaders for LongMemEval and LoCoMo subsets in `eval/datasets/`
-  - [ ] Subsets config in `eval/configs/subsets.yaml`
-- [ ] **Phase 5.2: Baseline Implementations**
-  - [ ] Full-context baseline in `eval/baselines/full_context.py`
-  - [ ] Naive RAG baseline in `eval/baselines/naive_rag.py`
-- [ ] **Phase 5.3: Benchmark Runner & Output Caching**
-  - [ ] CLI runner in `eval/run.py` with reproducible seeds and disk caching
-  - [ ] Standardized LLM judge prompt in `eval/judge.py`
+- [x] **Phase 5.1: Benchmark Dataset Loaders & Splits**
+  - [x] Dataset loaders for LongMemEval and LoCoMo subsets in `eval/datasets/`
+  - [x] Subsets config in `eval/configs/subsets.yaml`
+- [x] **Phase 5.2: Baseline Implementations**
+  - [x] Full-context baseline in `eval/baselines/full_context.py`
+  - [x] Naive RAG baseline in `eval/baselines/naive_rag.py`
+  - [x] MemLayer baseline in `eval/baselines/memlayer_agent.py`
+- [x] **Phase 5.3: Benchmark Runner & Output Caching**
+  - [x] CLI runner in `eval/run.py` with reproducible seeds and disk caching
+  - [x] Standardized LLM judge prompt in `eval/judge.py`
 - [ ] **Phase 5.4: Baseline vs MemLayer Benchmark Execution**
   - [ ] Execute evaluation runs and save raw outputs to `eval/results/`
   - [ ] Compute accuracy, latency (p50/p95), tokens/query, and cost
