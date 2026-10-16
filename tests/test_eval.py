@@ -333,3 +333,59 @@ async def test_runner_smoke_execution(tmp_path: Path) -> None:
     # Check output json file written
     saved_files = list((tmp_path / "results").glob("*.json"))
     assert len(saved_files) == 1
+
+
+# =============================================================================
+# 6. Ablation Study Tests
+# =============================================================================
+
+
+def test_ablation_configs() -> None:
+    from eval.ablation import get_ablation_configs
+
+    configs = get_ablation_configs()
+    assert "memlayer_full" in configs
+    assert "without_decay" in configs
+    assert "without_supersession" in configs
+    assert "vector_only" in configs
+    assert "without_recency" in configs
+
+    assert configs["without_supersession"]["kwargs"]["enable_supersession"] is False
+    assert configs["without_decay"]["kwargs"]["enable_decay"] is False
+    assert configs["vector_only"]["kwargs"]["vector_only"] is True
+
+
+@pytest.mark.asyncio
+async def test_ablation_suite_execution(tmp_path: Path) -> None:
+    from eval.ablation import run_ablation_suite
+
+    cache = DiskCache(cache_dir=tmp_path / "cache")
+    mock_llm = lambda *_a, **_kw: ("Berlin (moved from Paris).", 30, 8)  # noqa: E731
+    questions = load_eval_dataset(
+        benchmark="longmemeval",
+        split="dev",
+        category="knowledge_update",
+        limit=1,
+    )
+
+    suite = await run_ablation_suite(
+        questions=questions,
+        benchmark="longmemeval",
+        model="mock-model",
+        judge_model="mock-judge",
+        cache=cache,
+        output_dir=tmp_path / "results",
+        extra_baseline_kwargs={
+            "llm_client": mock_llm,
+            "embedder": MockEmbedder(dimension=64),
+            "extractor": _make_mock_extractor(["User moved to Berlin permanently."]),
+        },
+    )
+
+    assert "suite_id" in suite
+    assert len(suite["ablation_metrics"]) == 5
+    assert "memlayer_full" in suite["ablation_metrics"]
+    assert "without_supersession" in suite["ablation_metrics"]
+
+    suite_files = list((tmp_path / "results").glob("*suite*.json"))
+    assert len(suite_files) == 1
