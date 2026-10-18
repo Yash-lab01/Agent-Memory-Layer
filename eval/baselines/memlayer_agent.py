@@ -40,7 +40,11 @@ class OfflineAwareFactExtractor(FactExtractor):
                 entity = "User"
                 lower = clean_text.lower()
 
-                if "relocated to austin" in lower or "moved to austin" in lower or ("austin" in lower and "seattle" in lower):
+                if (
+                    "relocated to austin" in lower
+                    or "moved to austin" in lower
+                    or ("austin" in lower and "seattle" in lower)
+                ):
                     clean_text = "User relocated to Austin, Texas."
                     entity = "Location"
                 elif "seattle" in lower:
