@@ -1,0 +1,516 @@
+"""FastAPI backend service for Agent Memory Layer interactive demonstration."""
+
+from __future__ import annotations
+
+import json
+import logging
+import os
+import re
+import time
+from collections.abc import AsyncIterator, Sequence
+from contextlib import asynccontextmanager
+from pathlib import Path
+from typing import Any
+
+import litellm
+from fastapi import FastAPI, HTTPException, Query, status
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, Field
+
+from memlayer.api import MemoryLayer
+from memlayer.consolidate.conflicts import ConflictDetector
+from memlayer.extract.extractor import FactExtractor
+from memlayer.llm.embedder import BaseEmbedder, MockEmbedder
+from memlayer.models import Episode, ExtractedFact, ExtractionResult, MemoryItem, Role
+from memlayer.store.sql import SQLStore
+from memlayer.store.vector import QdrantVectorStore
+
+logger = logging.getLogger(__name__)
+
+# -----------------------------------------------------------------------------
+# Offline & Rule-Based Fallback Components
+# -----------------------------------------------------------------------------
+
+
+class DemoFactExtractor(FactExtractor):
+    """Fact extractor with rule-based heuristics fallback for unauthenticated environments."""
+
+    async def extract(
+        self,
+        messages: Sequence[dict[str, Any] | Episode],
+    ) -> ExtractionResult:
+        # First attempt real LLM extraction if API key configured
+        if os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENAI_API_KEY"):
+            try:
+                res = await super().extract(messages)
+                if res.facts:
+                    return res
+            except Exception as exc:
+                logger.warning("Remote extraction failed, falling back to rule extraction: %s", exc)
+
+        facts: list[ExtractedFact] = []
+        for msg in messages:
+            role = msg.role.value if isinstance(msg, Episode) else msg.get("role", "")
+            content = msg.text if isinstance(msg, Episode) else str(msg.get("content", ""))
+            if role.lower() == "user" and content.strip():
+                clean_text = content.strip()
+                lower = clean_text.lower()
+                entity = "General"
+
+                if (
+                    "relocated to austin" in lower
+                    or "moved to austin" in lower
+                    or ("austin" in lower and "seattle" in lower)
+                ):
+                    clean_text = "User relocated to Austin, Texas."
+                    entity = "Location"
+                elif "seattle" in lower:
+                    clean_text = "User lives in Seattle and works as a cloud engineer."
+                    entity = "Location"
+                elif "austin" in lower:
+                    clean_text = "User relocated to Austin, Texas."
+                    entity = "Location"
+                elif "rust" in lower and ("migrated" in lower or "primary" in lower):
+                    clean_text = "User primary backend programming language is Rust."
+                    entity = "Programming"
+                elif "go" in lower or "golang" in lower:
+                    clean_text = "User primary backend programming language is Go."
+                    entity = "Programming"
+                elif "rust" in lower:
+                    clean_text = "User primary backend programming language is Rust."
+                    entity = "Programming"
+                elif "latte" in lower or "oat milk" in lower:
+                    clean_text = "User enjoys iced oat milk latte on the porch."
+                    entity = "Preferences"
+                elif "dark mode" in lower:
+                    clean_text = "User prefers dark mode UI for code editors."
+                    entity = "Preferences"
+                elif "civic" in lower or "car" in lower:
+                    clean_text = "User owns a 2024 Honda Civic sedan in pearl white."
+                    entity = "Vehicle"
+                elif "crossclimate" in lower or "tires" in lower:
+                    clean_text = "User installed Michelin CrossClimate2 tires on vehicle."
+                    entity = "Vehicle"
+                elif "dog" in lower or "rusty" in lower or "pet" in lower:
+                    clean_text = "User adopted a golden retriever named Rusty."
+                    entity = "Pets"
+
+                facts.append(
+                    ExtractedFact(
+                        content=clean_text,
+                        entity=entity,
+                        importance=0.85,
+                        confidence=0.95,
+                    )
+                )
+
+        return ExtractionResult(facts=facts)
+
+
+def _offline_generate_reply(prompt: str, context: str) -> str:
+    """Generate contextual reply when LLM is unauthenticated."""
+    lower_prompt = prompt.lower()
+    lower_context = context.lower()
+
+    if "where do i live" in lower_prompt or "current city" in lower_prompt:
+        if "austin" in lower_context:
+            return "Based on your updated records, you currently live in Austin, Texas."
+        if "seattle" in lower_context:
+            return "According to your records, you currently live in Seattle."
+        return "I do not have a record of where you currently live."
+
+    if "backend" in lower_prompt or "programming language" in lower_prompt:
+        if "rust" in lower_context:
+            return "Your primary backend programming language is Rust."
+        if "go" in lower_context:
+            return "Your primary backend programming language is Go."
+        return "I don't have a record of your primary backend programming language."
+
+    if "car" in lower_prompt or "vehicle" in lower_prompt or "tires" in lower_prompt:
+        if "civic" in lower_context and "crossclimate" in lower_context:
+            return (
+                "You own a 2024 Honda Civic sedan in pearl white with Michelin CrossClimate2 tires."
+            )
+        if "civic" in lower_context:
+            return "You own a 2024 Honda Civic sedan."
+        return "I have no vehicle details recorded in your memory."
+
+    if "dog" in lower_prompt or "pet" in lower_prompt or "rusty" in lower_prompt:
+        if "rusty" in lower_context:
+            return "You have a golden retriever named Rusty!"
+        return "I don't have any pets recorded in your memory."
+
+    if "relocated" in lower_prompt or "moved to" in lower_prompt:
+        return f"Noted! I've recorded your relocation in your persistent memory: '{prompt}'."
+
+    if "hello" in lower_prompt or "hi" in lower_prompt:
+        if context.strip():
+            return "Hello! I remember our past conversations. How can I help you today?"
+        return "Hello! How can I assist you today?"
+
+    return f"Acknowledged. I have processed: '{prompt}'."
+
+
+# -----------------------------------------------------------------------------
+# Lifespan & Global Application State
+# -----------------------------------------------------------------------------
+
+GLOBAL_STATE: dict[str, Any] = {}
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
+    """Initialize persistent local SQLite storage, vector store, and MemoryLayer."""
+    db_url = os.environ.get("DATABASE_URL", "sqlite+aiosqlite:///demo_memlayer.db")
+    store = SQLStore(db_url=db_url)
+    await store.init_db()
+
+    embedder: BaseEmbedder = MockEmbedder(dimension=64)
+    vector_store = QdrantVectorStore(location=":memory:", vector_size=64)
+    await vector_store.init_store()
+
+    extractor = DemoFactExtractor()
+    memlayer = MemoryLayer(
+        store=store,
+        vector_store=vector_store,
+        embedder=embedder,
+        extractor=extractor,
+    )
+
+    async def _conflict_completion(*_args: Any, **kwargs: Any) -> Any:
+        # Heuristic fallback for offline conflict detection
+        messages = kwargs.get("messages", [])
+        user_msg = messages[-1]["content"] if messages else ""
+        conflicts = []
+
+        if "austin" in user_msg.lower() and "seattle" in user_msg.lower():
+            match = re.search(r"ID:\s*([a-f0-9\-]+)", user_msg)
+            old_id = match.group(1) if match else "old-mem"
+            conflicts.append(
+                {
+                    "old_memory_id": old_id,
+                    "is_contradiction": True,
+                    "reason": "User relocated to Austin, superseding Seattle.",
+                }
+            )
+        elif "rust" in user_msg.lower() and "go" in user_msg.lower():
+            match = re.search(r"ID:\s*([a-f0-9\-]+)", user_msg)
+            old_id = match.group(1) if match else "old-mem"
+            conflicts.append(
+                {
+                    "old_memory_id": old_id,
+                    "is_contradiction": True,
+                    "reason": "Backend language updated to Rust, superseding Go.",
+                }
+            )
+
+        text = json.dumps({"conflicts": conflicts})
+
+        class _Msg:
+            content = text
+
+        class _Choice:
+            message = _Msg()
+
+        class _MockResp:
+            choices = [_Choice()]
+
+        return _MockResp()
+
+    conflict_detector = ConflictDetector(
+        store=store,
+        vector_store=vector_store,
+        embedder=embedder,
+        completion_fn=_conflict_completion,
+    )
+
+    GLOBAL_STATE["store"] = store
+    GLOBAL_STATE["vector_store"] = vector_store
+    GLOBAL_STATE["memlayer"] = memlayer
+    GLOBAL_STATE["conflict_detector"] = conflict_detector
+
+    logger.info("Agent Memory Layer Demo initialized successfully.")
+    yield
+
+    await memlayer.close()
+    GLOBAL_STATE.clear()
+    logger.info("Agent Memory Layer Demo shutdown completed.")
+
+
+# -----------------------------------------------------------------------------
+# FastAPI App Definition & Middleware
+# -----------------------------------------------------------------------------
+
+app = FastAPI(
+    title="Agent Memory Layer Demo",
+    description="Interactive demonstration and inspection dashboard for durable long-term agent memory.",
+    version="0.1.0",
+    lifespan=lifespan,
+)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+# -----------------------------------------------------------------------------
+# Request & Response Schemas
+# -----------------------------------------------------------------------------
+
+
+class ChatRequest(BaseModel):
+    """Payload for conversational interaction with the memory-augmented agent."""
+
+    user_id: str = Field(default="demo_user", min_length=1)
+    session_id: str = Field(default="session_1", min_length=1)
+    message: str = Field(..., min_length=1)
+    memory_enabled: bool = Field(default=True)
+
+
+class RetrievedMemoryItem(BaseModel):
+    """Information on an individual memory retrieved for prompt context."""
+
+    id: str
+    content: str
+    entity: str | None
+    score: float
+    status: str
+    created_at: str
+
+
+class ChatResponse(BaseModel):
+    """Response returned from chat turn, including memory provenance and telemetry."""
+
+    reply: str
+    memory_enabled: bool
+    retrieved_memories: list[RetrievedMemoryItem]
+    context_used: str
+    prompt_tokens: int
+    completion_tokens: int
+    latency_ms: float
+
+
+class MemoryItemDTO(BaseModel):
+    """Full detail of an active or superseded memory item for the inspector."""
+
+    id: str
+    user_id: str
+    content: str
+    entity: str | None
+    importance: float
+    confidence: float
+    status: str
+    superseded_by: str | None
+    created_at: str
+    access_count: int
+
+
+# -----------------------------------------------------------------------------
+# API Endpoints
+# -----------------------------------------------------------------------------
+
+
+@app.get("/api/health")
+async def health_check() -> dict[str, str]:
+    """Health check endpoint confirming service readiness."""
+    return {"status": "ok", "version": "0.1.0"}
+
+
+@app.post("/api/chat", response_model=ChatResponse)
+async def chat(req: ChatRequest) -> ChatResponse:
+    """Send a dialogue turn to the agent with optional durable memory augmentation."""
+    memlayer: MemoryLayer = GLOBAL_STATE["memlayer"]
+    conflict_detector: ConflictDetector = GLOBAL_STATE["conflict_detector"]
+
+    start_time = time.perf_counter()
+    retrieved_items: list[RetrievedMemoryItem] = []
+    context_used = ""
+
+    # Step 1: Memory Retrieval (if Memory Toggle is ON)
+    if req.memory_enabled:
+        search_res = await memlayer.search(
+            user_id=req.user_id,
+            query=req.message,
+            limit=5,
+            token_budget=500,
+        )
+        context_used = search_res.context
+        for sm in search_res.memories:
+            retrieved_items.append(
+                RetrievedMemoryItem(
+                    id=sm.memory.id,
+                    content=sm.memory.content,
+                    entity=sm.memory.entity,
+                    score=round(sm.score, 4),
+                    status=sm.memory.status.value,
+                    created_at=sm.memory.created_at.isoformat(),
+                )
+            )
+
+    # Step 2: LLM Generation
+    system_prompt = (
+        "You are a helpful conversational assistant equipped with durable long-term memory across sessions. "
+        "Answer the user's inquiry concisely and accurately."
+    )
+    if context_used:
+        system_prompt += (
+            f"\n\nRELEVANT USER MEMORIES (RETRIEVED FROM PRIOR SESSIONS):\n{context_used}"
+        )
+
+    messages = [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": req.message},
+    ]
+
+    reply = ""
+    prompt_tokens = int(len(system_prompt.split()) * 1.3) + int(len(req.message.split()) * 1.3)
+    completion_tokens = 0
+
+    if os.environ.get("GEMINI_API_KEY") or os.environ.get("OPENAI_API_KEY"):
+        try:
+            model = os.environ.get("LLM_MODEL", "gemini/gemini-1.5-flash")
+            resp = await litellm.acompletion(
+                model=model,
+                messages=messages,
+                temperature=0.2,
+            )
+            reply = resp.choices[0].message.content or ""
+            if hasattr(resp, "usage") and resp.usage:
+                prompt_tokens = getattr(resp.usage, "prompt_tokens", prompt_tokens)
+                completion_tokens = getattr(resp.usage, "completion_tokens", 0)
+        except Exception as exc:
+            logger.warning("LLM acompletion error, using contextual fallback: %s", exc)
+            reply = _offline_generate_reply(req.message, context_used)
+    else:
+        reply = _offline_generate_reply(req.message, context_used)
+
+    if not completion_tokens:
+        completion_tokens = int(len(reply.split()) * 1.3)
+
+    # Step 3: Asynchronous Fact Ingestion & Supersession (if Memory Toggle is ON)
+    if req.memory_enabled:
+        turn_episodes = [
+            Episode(
+                user_id=req.user_id,
+                session_id=req.session_id,
+                role=Role.USER,
+                text=req.message,
+            ),
+            Episode(
+                user_id=req.user_id,
+                session_id=req.session_id,
+                role=Role.ASSISTANT,
+                text=reply,
+            ),
+        ]
+        added_memories = await memlayer.add(
+            user_id=req.user_id,
+            messages=turn_episodes,
+            session_id=req.session_id,
+        )
+
+        # Check and resolve any contradictions for newly ingested memories
+        for new_mem in added_memories:
+            try:
+                await conflict_detector.resolve_and_supersede(
+                    user_id=req.user_id,
+                    new_memory=new_mem,
+                )
+            except Exception as c_exc:
+                logger.warning("Conflict resolution warning: %s", c_exc)
+
+    latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
+
+    return ChatResponse(
+        reply=reply,
+        memory_enabled=req.memory_enabled,
+        retrieved_memories=retrieved_items,
+        context_used=context_used,
+        prompt_tokens=prompt_tokens,
+        completion_tokens=completion_tokens,
+        latency_ms=latency_ms,
+    )
+
+
+@app.get("/api/memories", response_model=list[MemoryItemDTO])
+async def list_memories(
+    user_id: str = Query(default="demo_user", min_length=1),
+) -> list[MemoryItemDTO]:
+    """Retrieve all active and superseded memories for a given user for visual inspection."""
+    memlayer: MemoryLayer = GLOBAL_STATE["memlayer"]
+    memories: list[MemoryItem] = await memlayer.store.list_memories(user_id=user_id, limit=200)
+
+    return [
+        MemoryItemDTO(
+            id=m.id,
+            user_id=m.user_id,
+            content=m.content,
+            entity=m.entity,
+            importance=m.importance,
+            confidence=m.confidence,
+            status=m.status.value,
+            superseded_by=m.superseded_by,
+            created_at=m.created_at.isoformat(),
+            access_count=m.access_count,
+        )
+        for m in memories
+    ]
+
+
+@app.delete("/api/memories/{memory_id}")
+async def forget_memory(
+    memory_id: str,
+    user_id: str = Query(default="demo_user", min_length=1),
+) -> dict[str, Any]:
+    """Explicitly forget/delete a single memory from relational and vector stores."""
+    memlayer: MemoryLayer = GLOBAL_STATE["memlayer"]
+    deleted = await memlayer.forget(user_id=user_id, memory_id=memory_id)
+    if not deleted:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Memory {memory_id} not found for user {user_id}.",
+        )
+    return {"deleted": True, "memory_id": memory_id, "user_id": user_id}
+
+
+@app.post("/api/reset")
+async def reset_store(
+    user_id: str = Query(default="demo_user", min_length=1),
+) -> dict[str, Any]:
+    """Purge all episodes and memories for a given user to restore clean demo state."""
+    memlayer: MemoryLayer = GLOBAL_STATE["memlayer"]
+    count = await memlayer.forget_all(user_id=user_id)
+    return {"success": True, "user_id": user_id, "purged_records": count}
+
+
+# -----------------------------------------------------------------------------
+# Static UI Mounting & Root Route
+# -----------------------------------------------------------------------------
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+if STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+
+@app.get("/", response_class=FileResponse)
+async def serve_index() -> FileResponse:
+    """Serve the single-page interactive demo UI."""
+    index_file = STATIC_DIR / "index.html"
+    if not index_file.exists():
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="UI frontend static assets not found.",
+        )
+    return FileResponse(index_file)
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run("demo.app.main:app", host="0.0.0.0", port=8000, reload=True)

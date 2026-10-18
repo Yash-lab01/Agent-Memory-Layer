@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Agent Memory Layer | Interactive Demo & Inspector</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body class="theme-dark">
+  <!-- Top Navigation Bar -->
+  <header class="app-header">
+    <div class="header-left">
+      <div class="brand-logo">
+        <span class="logo-icon">🧠</span>
+        <div class="logo-text">
+          <span class="logo-title">Agent Memory Layer</span>
+          <span class="logo-tag">Interactive Demo & Inspector</span>
+        </div>
+      </div>
+      <div class="status-indicator">
+        <span class="pulse-dot"></span>
+        <span class="status-label">Engine Ready</span>
+      </div>
+    </div>
+
+    <div class="header-center">
+      <!-- Global Controls: User & Session Scope -->
+      <div class="scope-controls">
+        <div class="control-group">
+          <label for="input-user-id">User ID:</label>
+          <input type="text" id="input-user-id" class="input-glass" value="demo_user" placeholder="User namespace" />
+        </div>
+        <div class="control-group">
+          <label for="select-session-id">Session:</label>
+          <select id="select-session-id" class="select-glass">
+            <option value="session_1">Session 1 (Initial Setup)</option>
+            <option value="session_2">Session 2 (State Update)</option>
+            <option value="session_3">Session 3 (Evaluation Turn)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-right">
+      <div class="toggle-container">
+        <span class="toggle-label" id="toggle-state-text">Memory ON</span>
+        <label class="switch" for="memory-toggle">
+          <input type="checkbox" id="memory-toggle" checked />
+          <span class="slider round"></span>
+        </label>
+      </div>
+    </div>
+  </header>
+
+  <!-- Metrics Ribbon -->
+  <section class="metrics-ribbon">
+    <div class="metric-card" id="card-active-count">
+      <span class="metric-label">Active Memories</span>
+      <span class="metric-value" id="val-active-count">0</span>
+    </div>
+    <div class="metric-card" id="card-superseded-count">
+      <span class="metric-label">Superseded Facts</span>
+      <span class="metric-value accent-rose" id="val-superseded-count">0</span>
+    </div>
+    <div class="metric-card" id="card-last-prompt-tokens">
+      <span class="metric-label">Last Prompt Tokens</span>
+      <span class="metric-value accent-cyan" id="val-prompt-tokens">0</span>
+    </div>
+    <div class="metric-card" id="card-last-latency">
+      <span class="metric-label">Query Latency</span>
+      <span class="metric-value accent-emerald" id="val-latency">0 ms</span>
+    </div>
+  </section>
+
+  <!-- Main Application Body: Split Screen -->
+  <main class="main-container">
+    <!-- Left Panel: Chat Interface -->
+    <section class="panel chat-panel" id="panel-chat">
+      <div class="panel-header">
+        <div class="panel-title-wrapper">
+          <h2 class="panel-title">Conversational Chat</h2>
+          <span class="mode-badge badge-memory-on" id="badge-chat-mode">Memory Augmented</span>
+        </div>
+        <button id="btn-clear-chat" class="btn-ghost" title="Clear chat window">Clear Chat</button>
+      </div>
+
+      <!-- Quick Preset Scenarios -->
+      <div class="scenarios-bar">
+        <span class="scenarios-title">Quick Scenarios:</span>
+        <button class="btn-pill" id="btn-scenario-location" data-text="I live in Seattle and work as a cloud engineer." data-session="session_1">
+          1. Seattle (Session 1)
+        </button>
+        <button class="btn-pill" id="btn-scenario-update" data-text="I relocated to Austin, Texas." data-session="session_2">
+          2. Relocate to Austin (Session 2)
+        </button>
+        <button class="btn-pill" id="btn-scenario-query" data-text="Where do I currently live?" data-session="session_3">
+          3. Where do I live? (Session 3)
+        </button>
+        <button class="btn-pill" id="btn-scenario-pref" data-text="My primary backend programming language is Go." data-session="session_1">
+          4. Go Backend
+        </button>
+        <button class="btn-pill" id="btn-scenario-rust" data-text="We migrated our architecture to Rust." data-session="session_2">
+          5. Migrate to Rust
+        </button>
+      </div>
+
+      <!-- Messages Stream -->
+      <div class="chat-messages" id="chat-messages">
+        <div class="system-welcome-card">
+          <div class="welcome-header">
+            <span class="welcome-icon">💡</span>
+            <h3>Welcome to Agent Memory Layer</h3>
+          </div>
+          <p>
+            This demo demonstrates durable memory across sessions. When <strong>Memory ON</strong> is active, atomic facts are asynchronously extracted, ranked using recency & importance scoring, and older conflicting facts are non-destructively marked <code>superseded</code>.
+          </p>
+          <p>
+            Toggle <strong>Memory OFF</strong> at any time to compare against a standard stateless LLM!
+          </p>
+        </div>
+      </div>
+
+      <!-- Chat Input Area -->
+      <div class="chat-input-wrapper">
+        <textarea
+          id="chat-input"
+          class="chat-textarea"
+          rows="2"
+          placeholder="Type a message (e.g. 'I just moved to Austin, Texas' or 'Where do I live?')..."
+        ></textarea>
+        <button id="btn-send" class="btn-primary">
+          <span class="btn-text">Send</span>
+          <span class="btn-icon">➤</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- Right Panel: Live Memory Inspector -->
+    <section class="panel inspector-panel" id="panel-inspector">
+      <div class="panel-header">
+        <div class="panel-title-wrapper">
+          <h2 class="panel-title">Live Memory Inspector</h2>
+          <span class="badge-inspector-scope" id="badge-inspector-user">demo_user</span>
+        </div>
+        <div class="inspector-actions">
+          <button id="btn-refresh-memories" class="btn-ghost" title="Refresh memory items">↻ Refresh</button>
+          <button id="btn-reset-store" class="btn-danger-ghost" title="Purge user memories">Reset Store</button>
+        </div>
+      </div>
+
+      <!-- Tabs: Active vs Superseded -->
+      <div class="inspector-tabs">
+        <button class="tab-btn active" id="tab-active" data-tab="active">
+          Active Facts (<span id="tab-active-count">0</span>)
+        </button>
+        <button class="tab-btn" id="tab-superseded" data-tab="superseded">
+          Superseded History (<span id="tab-superseded-count">0</span>)
+        </button>
+      </div>
+
+      <!-- Tab Content Area -->
+      <div class="inspector-content">
+        <!-- Active Memories View -->
+        <div class="tab-pane active" id="pane-active">
+          <div id="active-memories-list" class="memory-card-list">
+            <div class="empty-state">
+              <span class="empty-icon">📂</span>
+              <p>No active memories extracted yet.</p>
+              <span class="empty-hint">Send a message in the chat to extract atomic facts!</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Superseded Memories View -->
+        <div class="tab-pane" id="pane-superseded">
+          <div id="superseded-memories-list" class="memory-card-list">
+            <div class="empty-state">
+              <span class="empty-icon">🛡️</span>
+              <p>No superseded facts yet.</p>
+              <span class="empty-hint">Update a previously stated fact (e.g., Seattle &rarr; Austin) to observe non-destructive supersession!</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>
