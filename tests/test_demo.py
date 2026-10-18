@@ -6,9 +6,13 @@ import uuid
 from collections.abc import Iterator
 
 import pytest
-from starlette.testclient import TestClient
 
-from demo.app.main import app
+try:
+    from starlette.testclient import TestClient
+
+    from demo.app.main import app
+except ImportError:
+    pytest.skip("fastapi and demo dependencies not installed", allow_module_level=True)
 
 
 @pytest.fixture(scope="module")
