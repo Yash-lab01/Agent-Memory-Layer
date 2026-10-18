@@ -1,0 +1,112 @@
+{
+  "run_id": "longmemeval_memlayer_20261018_131223",
+  "benchmark": "longmemeval",
+  "baseline": "memlayer",
+  "model": "gemini/gemini-1.5-flash",
+  "judge_model": "gemini/gemini-1.5-pro",
+  "timestamp": "2026-10-18T13:12:23.724884+00:00",
+  "metrics": {
+    "total_questions": 4,
+    "correct_count": 4,
+    "overall_accuracy": 100.0,
+    "category_accuracy": {
+      "knowledge_update": {
+        "total": 1,
+        "correct": 1,
+        "accuracy": 100.0
+      },
+      "temporal_reasoning": {
+        "total": 1,
+        "correct": 1,
+        "accuracy": 100.0
+      },
+      "multi_session": {
+        "total": 1,
+        "correct": 1,
+        "accuracy": 100.0
+      },
+      "abstention": {
+        "total": 1,
+        "correct": 1,
+        "accuracy": 100.0
+      }
+    },
+    "latency": {
+      "mean_ms": 19.89,
+      "p50_ms": 20.94,
+      "p95_ms": 25.73
+    },
+    "tokens": {
+      "mean_prompt": 74.5,
+      "mean_completion": 10.75,
+      "total": 341
+    },
+    "estimated_cost_usd": 7e-05
+  },
+  "results": [
+    {
+      "question_id": "lme-ku-001",
+      "category": "knowledge_update",
+      "user_id": "eval_user_lme_1",
+      "question": "Which city do I currently live in?",
+      "ground_truth": "Austin, Texas (the user originally moved to Seattle, but relocated to Austin).",
+      "prediction": "You currently live in Austin, Texas.",
+      "is_correct": true,
+      "score": 1.0,
+      "rationale": "Heuristic check: Found current updated value 'austin, texas'. (litellm.APIConnectionError: Missing Gemini API key. Set the GEMINI_API_KEY or GOOGLE_API_KEY environment variable.\nTraceback (most recent call last):\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\main.py\", line 681, in acompletion\n    response = await _resolve_dispatched_chat_response(init_response)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\main.py\", line 746, in _resolve_dispatched_chat_response\n    return await pending\n           ^^^^^^^^^^^^^\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\llms\\vertex_ai\\gemini\\vertex_and_google_ai_studio_gemini.py\", line 2788, in async_completion\n    auth_header, api_base = self._get_token_and_url(\n                            ~~~~~~~~~~~~~~~~~~~~~~~^\n        model=model,\n        ^^^^^^^^^^^^\n    ...<8 lines>...\n        use_psc_endpoint_format=use_psc_endpoint_format,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\llms\\vertex_ai\\vertex_llm_base.py\", line 726, in _get_token_and_url\n    raise ValueError(\n        \"Missing Gemini API key. Set the GEMINI_API_KEY or GOOGLE_API_KEY environment variable.\"\n    )\nValueError: Missing Gemini API key. Set the GEMINI_API_KEY or GOOGLE_API_KEY environment variable.\n\nThis looks like a bug in LiteLLM rather than in your request. File it with one click (prefilled, no request data or error text, review before submitting): https://github.com/BerriAI/litellm/issues/new?template=bug_report.yml&labels=bug&title=%5BBug%5D%3A+ValueError+in+litellm%2Fllms%2Fvertex_ai%2Fvertex_llm_base.py&version=1.105.0&domain=Python+SDK%3A+the+litellm+package+itself&description=Auto-generated+by+LiteLLM%27s+bug+report+link.+It+carries+no+request+data+or+error+text.+Please+describe+what+you+were+doing%2C+and+paste+the+error+message+from+your+log+below+if+it+contains+nothing+sensitive.%0A%0A%60%60%60%0A%0A%60%60%60%0A%0AException%3A+%60ValueError%60%0A%0ALiteLLM+frames%3A%0A%60%60%60%0Alitellm%2Fmain.py%3A681+in+acompletion%0Alitellm%2Fmain.py%3A746+in+_resolve_dispatched_chat_response%0Alitellm%2Fllms%2Fvertex_ai%2Fgemini%2Fvertex_and_google_ai_studio_gemini.py%3A2788+in+async_completion%0Alitellm%2Fllms%2Fvertex_ai%2Fvertex_llm_base.py%3A726+in+_get_token_and_url%0A%60%60%60%0A%0ASurface%3A+sdk%0AEndpoint+%2F+call%3A+unknown%0AProvider%3A+gemini%0ALiteLLM%3A+1.105.0%0APython%3A+3.14.6%0A&deployment=pip+%2F+Python+SDK)",
+      "latency_ms": 23.556800006190315,
+      "prompt_tokens": 65,
+      "completion_tokens": 6,
+      "total_tokens": 71,
+      "context_used": "[2026-10-18] (Location) User relocated to Austin, Texas."
+    },
+    {
+      "question_id": "lme-tr-002",
+      "category": "temporal_reasoning",
+      "user_id": "eval_user_lme_2",
+      "question": "What date does my vacation flight depart?",
+      "ground_truth": "May 14, 2026 (4 days after the dental surgery on May 10, 2026).",
+      "prediction": "Your vacation flight departs on May 14, 2026.",
+      "is_correct": true,
+      "score": 1.0,
+      "rationale": "Heuristic word overlap (1/5 words matching). (litellm.APIConnectionError: Missing Gemini API key. Set the GEMINI_API_KEY or GOOGLE_API_KEY environment variable.\nTraceback (most recent call last):\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\main.py\", line 681, in acompletion\n    response = await _resolve_dispatched_chat_response(init_response)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\main.py\", line 746, in _resolve_dispatched_chat_response\n    return await pending\n           ^^^^^^^^^^^^^\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\llms\\vertex_ai\\gemini\\vertex_and_google_ai_studio_gemini.py\", line 2788, in async_completion\n    auth_header, api_base = self._get_token_and_url(\n                            ~~~~~~~~~~~~~~~~~~~~~~~^\n        model=model,\n        ^^^^^^^^^^^^\n    ...<8 lines>...\n        use_psc_endpoint_format=use_psc_endpoint_format,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\llms\\vertex_ai\\vertex_llm_base.py\", line 726, in _get_token_and_url\n    raise ValueError(\n        \"Missing Gemini API key. Set the GEMINI_API_KEY or GOOGLE_API_KEY environment variable.\"\n    )\nValueError: Missing Gemini API key. Set the GEMINI_API_KEY or GOOGLE_API_KEY environment variable.\n\nThis looks like a bug in LiteLLM rather than in your request. File it with one click (prefilled, no request data or error text, review before submitting): https://github.com/BerriAI/litellm/issues/new?template=bug_report.yml&labels=bug&title=%5BBug%5D%3A+ValueError+in+litellm%2Fllms%2Fvertex_ai%2Fvertex_llm_base.py&version=1.105.0&domain=Python+SDK%3A+the+litellm+package+itself&description=Auto-generated+by+LiteLLM%27s+bug+report+link.+It+carries+no+request+data+or+error+text.+Please+describe+what+you+were+doing%2C+and+paste+the+error+message+from+your+log+below+if+it+contains+nothing+sensitive.%0A%0A%60%60%60%0A%0A%60%60%60%0A%0AException%3A+%60ValueError%60%0A%0ALiteLLM+frames%3A%0A%60%60%60%0Alitellm%2Fmain.py%3A681+in+acompletion%0Alitellm%2Fmain.py%3A746+in+_resolve_dispatched_chat_response%0Alitellm%2Fllms%2Fvertex_ai%2Fgemini%2Fvertex_and_google_ai_studio_gemini.py%3A2788+in+async_completion%0Alitellm%2Fllms%2Fvertex_ai%2Fvertex_llm_base.py%3A726+in+_get_token_and_url%0A%60%60%60%0A%0ASurface%3A+sdk%0AEndpoint+%2F+call%3A+unknown%0AProvider%3A+gemini%0ALiteLLM%3A+1.105.0%0APython%3A+3.14.6%0A&deployment=pip+%2F+Python+SDK)",
+      "latency_ms": 18.319700000574812,
+      "prompt_tokens": 80,
+      "completion_tokens": 8,
+      "total_tokens": 88,
+      "context_used": "[2026-10-18] (Health) User dental surgery is scheduled for May 10, 2026.\n[2026-10-18] (Health) User dental surgery is scheduled for May 10, 2026."
+    },
+    {
+      "question_id": "lme-ms-003",
+      "category": "multi_session",
+      "user_id": "eval_user_lme_3",
+      "question": "Can you summarize both my favorite novelist and my go-to comfort meal?",
+      "ground_truth": "Favorite novelist is Haruki Murakami and comfort meal is spicy miso ramen.",
+      "prediction": "Your favorite novelist is Haruki Murakami, and your comfort meal is spicy miso ramen.",
+      "is_correct": true,
+      "score": 1.0,
+      "rationale": "Heuristic word overlap (9/9 words matching). (litellm.APIConnectionError: Missing Gemini API key. Set the GEMINI_API_KEY or GOOGLE_API_KEY environment variable.\nTraceback (most recent call last):\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\main.py\", line 681, in acompletion\n    response = await _resolve_dispatched_chat_response(init_response)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\main.py\", line 746, in _resolve_dispatched_chat_response\n    return await pending\n           ^^^^^^^^^^^^^\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\llms\\vertex_ai\\gemini\\vertex_and_google_ai_studio_gemini.py\", line 2788, in async_completion\n    auth_header, api_base = self._get_token_and_url(\n                            ~~~~~~~~~~~~~~~~~~~~~~~^\n        model=model,\n        ^^^^^^^^^^^^\n    ...<8 lines>...\n        use_psc_endpoint_format=use_psc_endpoint_format,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\llms\\vertex_ai\\vertex_llm_base.py\", line 726, in _get_token_and_url\n    raise ValueError(\n        \"Missing Gemini API key. Set the GEMINI_API_KEY or GOOGLE_API_KEY environment variable.\"\n    )\nValueError: Missing Gemini API key. Set the GEMINI_API_KEY or GOOGLE_API_KEY environment variable.\n\nThis looks like a bug in LiteLLM rather than in your request. File it with one click (prefilled, no request data or error text, review before submitting): https://github.com/BerriAI/litellm/issues/new?template=bug_report.yml&labels=bug&title=%5BBug%5D%3A+ValueError+in+litellm%2Fllms%2Fvertex_ai%2Fvertex_llm_base.py&version=1.105.0&domain=Python+SDK%3A+the+litellm+package+itself&description=Auto-generated+by+LiteLLM%27s+bug+report+link.+It+carries+no+request+data+or+error+text.+Please+describe+what+you+were+doing%2C+and+paste+the+error+message+from+your+log+below+if+it+contains+nothing+sensitive.%0A%0A%60%60%60%0A%0A%60%60%60%0A%0AException%3A+%60ValueError%60%0A%0ALiteLLM+frames%3A%0A%60%60%60%0Alitellm%2Fmain.py%3A681+in+acompletion%0Alitellm%2Fmain.py%3A746+in+_resolve_dispatched_chat_response%0Alitellm%2Fllms%2Fvertex_ai%2Fgemini%2Fvertex_and_google_ai_studio_gemini.py%3A2788+in+async_completion%0Alitellm%2Fllms%2Fvertex_ai%2Fvertex_llm_base.py%3A726+in+_get_token_and_url%0A%60%60%60%0A%0ASurface%3A+sdk%0AEndpoint+%2F+call%3A+unknown%0AProvider%3A+gemini%0ALiteLLM%3A+1.105.0%0APython%3A+3.14.6%0A&deployment=pip+%2F+Python+SDK)",
+      "latency_ms": 11.582800012547523,
+      "prompt_tokens": 82,
+      "completion_tokens": 14,
+      "total_tokens": 96,
+      "context_used": "[2026-10-18] (Preferences) User all-time favorite novelist is Haruki Murakami.\n[2026-10-18] (Preferences) User go-to comfort meal is spicy miso ramen."
+    },
+    {
+      "question_id": "lme-ab-004",
+      "category": "abstention",
+      "user_id": "eval_user_lme_4",
+      "question": "What is the name of my pet cat?",
+      "ground_truth": "The user has not mentioned having a pet cat (only a dog / golden retriever named Rusty).",
+      "prediction": "You have not mentioned having a pet cat; you only mentioned a dog named Rusty.",
+      "is_correct": true,
+      "score": 1.0,
+      "rationale": "Heuristic abstention check: passed. (litellm.APIConnectionError: Missing Gemini API key. Set the GEMINI_API_KEY or GOOGLE_API_KEY environment variable.\nTraceback (most recent call last):\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\main.py\", line 681, in acompletion\n    response = await _resolve_dispatched_chat_response(init_response)\n               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\main.py\", line 746, in _resolve_dispatched_chat_response\n    return await pending\n           ^^^^^^^^^^^^^\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\llms\\vertex_ai\\gemini\\vertex_and_google_ai_studio_gemini.py\", line 2788, in async_completion\n    auth_header, api_base = self._get_token_and_url(\n                            ~~~~~~~~~~~~~~~~~~~~~~~^\n        model=model,\n        ^^^^^^^^^^^^\n    ...<8 lines>...\n        use_psc_endpoint_format=use_psc_endpoint_format,\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n    )\n    ^\n  File \"C:\\Users\\yashp\\Desktop\\Agent Memory Layer\\.venv\\Lib\\site-packages\\litellm\\llms\\vertex_ai\\vertex_llm_base.py\", line 726, in _get_token_and_url\n    raise ValueError(\n        \"Missing Gemini API key. Set the GEMINI_API_KEY or GOOGLE_API_KEY environment variable.\"\n    )\nValueError: Missing Gemini API key. Set the GEMINI_API_KEY or GOOGLE_API_KEY environment variable.\n\nThis looks like a bug in LiteLLM rather than in your request. File it with one click (prefilled, no request data or error text, review before submitting): https://github.com/BerriAI/litellm/issues/new?template=bug_report.yml&labels=bug&title=%5BBug%5D%3A+ValueError+in+litellm%2Fllms%2Fvertex_ai%2Fvertex_llm_base.py&version=1.105.0&domain=Python+SDK%3A+the+litellm+package+itself&description=Auto-generated+by+LiteLLM%27s+bug+report+link.+It+carries+no+request+data+or+error+text.+Please+describe+what+you+were+doing%2C+and+paste+the+error+message+from+your+log+below+if+it+contains+nothing+sensitive.%0A%0A%60%60%60%0A%0A%60%60%60%0A%0AException%3A+%60ValueError%60%0A%0ALiteLLM+frames%3A%0A%60%60%60%0Alitellm%2Fmain.py%3A681+in+acompletion%0Alitellm%2Fmain.py%3A746+in+_resolve_dispatched_chat_response%0Alitellm%2Fllms%2Fvertex_ai%2Fgemini%2Fvertex_and_google_ai_studio_gemini.py%3A2788+in+async_completion%0Alitellm%2Fllms%2Fvertex_ai%2Fvertex_llm_base.py%3A726+in+_get_token_and_url%0A%60%60%60%0A%0ASurface%3A+sdk%0AEndpoint+%2F+call%3A+unknown%0AProvider%3A+gemini%0ALiteLLM%3A+1.105.0%0APython%3A+3.14.6%0A&deployment=pip+%2F+Python+SDK)",
+      "latency_ms": 26.110700011486188,
+      "prompt_tokens": 71,
+      "completion_tokens": 15,
+      "total_tokens": 86,
+      "context_used": "[2026-10-18] (Pets) User adopted a golden retriever named Rusty from local shelter."
+    }
+  ]
+}
