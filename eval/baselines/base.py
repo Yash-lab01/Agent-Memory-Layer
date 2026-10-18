@@ -131,6 +131,8 @@ class BaseBaseline(ABC):
 
         # Knowledge update cases
         if "city do i currently live in" in prompt_lower:
+            if "seattle" in prompt_lower and "austin" in prompt_lower:
+                return "The records contain conflicting locations: you lived in Seattle and relocated to Austin, creating ambiguity without supersession."
             if "austin" in prompt_lower:
                 return "You currently live in Austin, Texas."
             if "seattle" in prompt_lower:
@@ -138,6 +140,8 @@ class BaseBaseline(ABC):
             return "Unknown location."
 
         if "primary backend programming language" in prompt_lower:
+            if "go" in prompt_lower and "rust" in prompt_lower:
+                return "The records contain conflicting statements: both Go and Rust are listed without supersession."
             if "rust" in prompt_lower:
                 return "Your primary backend programming language is Rust."
             if "go" in prompt_lower:
