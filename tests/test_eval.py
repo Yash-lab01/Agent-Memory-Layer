@@ -27,13 +27,12 @@ def _make_mock_extractor(facts: list[str]) -> FactExtractor:
             entity="User",
             confidence=0.95,
             importance=0.8,
-            status="active",
         )
         for f in facts
     ]
 
     async def mock_extract(_messages: Any, _session_id: Any = None) -> ExtractionResult:
-        return ExtractionResult(facts=extracted, raw_response="mocked")
+        return ExtractionResult(facts=extracted)
 
     extractor.extract = mock_extract  # type: ignore[assignment]
     return extractor
