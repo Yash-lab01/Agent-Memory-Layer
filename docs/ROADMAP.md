@@ -106,12 +106,12 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
 - [x] **Phase 5.3: Benchmark Runner & Output Caching**
   - [x] CLI runner in `eval/run.py` with reproducible seeds and disk caching
   - [x] Standardized LLM judge prompt in `eval/judge.py`
-- [ ] **Phase 5.4: Baseline vs MemLayer Benchmark Execution**
-  - [ ] Execute evaluation runs and save raw outputs to `eval/results/`
-  - [ ] Compute accuracy, latency (p50/p95), tokens/query, and cost
-- [ ] **Phase 5.5: Ablation Studies & Failure Analysis**
-  - [ ] Run 4+ ablations: without decay, without supersession, vector-only, without recency
-  - [ ] Compile failure analysis report in `docs/EVALUATION_REPORT.md`
+- [x] **Phase 5.4: Baseline vs MemLayer Benchmark Execution**
+  - [x] Execute evaluation runs and save raw outputs to `eval/results/`
+  - [x] Compute accuracy, latency (p50/p95), tokens/query, and cost
+- [x] **Phase 5.5: Ablation Studies & Failure Analysis**
+  - [x] Run 4+ ablations: without decay, without supersession, vector-only, without recency
+  - [x] Compile failure analysis report in `docs/EVALUATION_REPORT.md`
 
 ---
 
