@@ -116,9 +116,9 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
 ---
 
 ## Milestone 6: Demo Application, MCP Server & Observability
-- [ ] **Phase 6.1: FastAPI Service & Interactive Web Demo**
-  - [ ] FastAPI backend in `demo/app/main.py`
-  - [ ] Interactive UI with Memory Toggle (ON / OFF) and live supersession visualizer
+- [x] **Phase 6.1: FastAPI Service & Interactive Web Demo**
+  - [x] FastAPI backend in `demo/app/main.py`
+  - [x] Interactive UI with Memory Toggle (ON / OFF) and live supersession visualizer
 - [ ] **Phase 6.2: Model Context Protocol (MCP) Server**
   - [ ] Implement `src/memlayer/mcp_server.py` using Python MCP SDK
   - [ ] Expose memory tools (`memlayer_add`, `memlayer_search`, `memlayer_forget`)
