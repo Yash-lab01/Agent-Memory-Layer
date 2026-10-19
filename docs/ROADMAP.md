@@ -119,10 +119,10 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
 - [x] **Phase 6.1: FastAPI Service & Interactive Web Demo**
   - [x] FastAPI backend in `demo/app/main.py`
   - [x] Interactive UI with Memory Toggle (ON / OFF) and live supersession visualizer
-- [ ] **Phase 6.2: Model Context Protocol (MCP) Server**
-  - [ ] Implement `src/memlayer/mcp_server.py` using Python MCP SDK
-  - [ ] Expose memory tools (`memlayer_add`, `memlayer_search`, `memlayer_forget`)
-  - [ ] MCP tool tests in `tests/test_mcp_server.py`
+- [x] **Phase 6.2: Model Context Protocol (MCP) Server**
+  - [x] Implement `src/memlayer/mcp_server.py` using Python MCP SDK
+  - [x] Expose memory tools (`memlayer_add`, `memlayer_search`, `memlayer_forget`, `memlayer_list`, `memlayer_reset`)
+  - [x] MCP tool tests in `tests/test_mcp_server.py`
 - [ ] **Phase 6.3: Observability & Tracing (Langfuse / OpenTelemetry)**
   - [ ] Implement `src/memlayer/tracing.py`
   - [ ] Docker Compose Langfuse service integration
