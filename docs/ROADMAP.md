@@ -134,9 +134,9 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
 - [x] **Phase 7.1: Packaging & PyPI Release Readiness**
   - [x] Verify standalone `pip install .` without demo dependencies
   - [x] Test wheel build and packaging
-- [ ] **Phase 7.2: Recruiter-Ready README & MkDocs Documentation**
-  - [ ] Comprehensive `README.md` with benchmark numbers and architecture diagram
-  - [ ] MkDocs Material setup and documentation pages
+- [x] **Phase 7.2: Recruiter-Ready README & MkDocs Documentation**
+  - [x] Comprehensive `README.md` with benchmark numbers and architecture diagram
+  - [x] MkDocs Material setup and documentation pages
 - [ ] **Phase 7.3: Portfolio Write-Up & Demo Walkthrough**
   - [ ] Case study and interview prep notes in `docs/PORTFOLIO.md`
 
