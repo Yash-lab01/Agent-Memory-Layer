@@ -24,6 +24,21 @@ services:
       - pgdata:/var/lib/postgresql/data
     restart: unless-stopped
 
+  langfuse:
+    image: langfuse/langfuse:2
+    container_name: memlayer-langfuse
+    depends_on:
+      - postgres
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgrespassword@postgres:5432/memlayer
+      - NEXTAUTH_URL=http://localhost:3000
+      - NEXTAUTH_SECRET=memlayer-langfuse-nextauth-secret-key-32chars
+      - SALT=memlayer-langfuse-salt-key-string
+      - TELEMETRY_ENABLED=false
+    restart: unless-stopped
+
 volumes:
   qdrant_storage:
   pgdata:
