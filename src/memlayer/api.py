@@ -24,6 +24,7 @@ from memlayer.store.episodes import EpisodeStore
 from memlayer.store.sql import SQLStore
 from memlayer.store.vector import QdrantVectorStore
 from memlayer.store.vector_base import VectorPoint, VectorStoreBase
+from memlayer.tracing import BaseTracer, get_tracer
 
 
 class MemoryLayer:
@@ -43,6 +44,7 @@ class MemoryLayer:
         router: RetrievalRouter | None = None,
         retriever: HybridRetriever | None = None,
         scoring_weights: ScoringWeights | None = None,
+        tracer: BaseTracer | None = None,
     ) -> None:
         """Initialize MemoryLayer with explicit storage and model backends."""
         self.store = store
@@ -57,6 +59,7 @@ class MemoryLayer:
             embedder=embedder,
         )
         self.scoring_weights = scoring_weights or ScoringWeights()
+        self.tracer = tracer or get_tracer()
         self._worker: ConsolidationWorker | None = None
 
     @classmethod
@@ -68,6 +71,7 @@ class MemoryLayer:
         extractor: FactExtractor | None = None,
         router: RetrievalRouter | None = None,
         scoring_weights: ScoringWeights | None = None,
+        tracer: BaseTracer | None = None,
     ) -> MemoryLayer:
         """Create a self-contained in-memory MemoryLayer instance for testing and local usage."""
         store = SQLStore(db_url=db_url)
@@ -89,6 +93,7 @@ class MemoryLayer:
             extractor=extractor or FactExtractor(),
             router=router,
             scoring_weights=scoring_weights,
+            tracer=tracer,
         )
 
     # -------------------------------------------------------------------------
@@ -155,78 +160,115 @@ class MemoryLayer:
                 role_str = role_val.value if hasattr(role_val, "value") else str(role_val)
                 dict_messages.append({"role": role_str, "content": str(msg.get("content", ""))})
 
-        # Step 1: Log episodes immediately for durable provenance
-        logged_episodes = await self.episode_logger.append_turns(
+        trace = self.tracer.trace(
+            "memory_add",
             user_id=clean_user_id,
-            messages=dict_messages,
             session_id=session_id or "default",
+            metadata={"message_count": len(dict_messages), "background": background},
         )
 
-        if not logged_episodes:
-            if background:
+        try:
+            # Step 1: Log episodes immediately for durable provenance
+            with self.tracer.span(
+                "episode_logger", parent=trace, metadata={"message_count": len(dict_messages)}
+            ) as ep_span:
+                logged_episodes = await self.episode_logger.append_turns(
+                    user_id=clean_user_id,
+                    messages=dict_messages,
+                    session_id=session_id or "default",
+                )
+                ep_span.set_output({"logged_count": len(logged_episodes)})
 
-                async def _empty() -> list[MemoryItem]:
-                    return []
+            if not logged_episodes:
+                trace.set_output({"extracted_facts_count": 0, "status": "no_episodes"})
+                trace.end(status="ok")
+                if background:
 
-                return asyncio.create_task(_empty())
-            return []
+                    async def _empty() -> list[MemoryItem]:
+                        return []
 
-        primary_source_id = logged_episodes[0].id
-
-        async def _ingest_pipeline() -> list[MemoryItem]:
-            extraction_result = await self.extractor.extract(logged_episodes)
-            if not extraction_result.facts:
+                    return asyncio.create_task(_empty())
                 return []
 
-            # Generate embeddings for extracted facts
-            contents = [f.content for f in extraction_result.facts]
-            vectors = await self.embedder.embed_texts(contents)
+            primary_source_id = logged_episodes[0].id
 
-            saved_items: list[MemoryItem] = []
-            vector_points: list[VectorPoint] = []
+            async def _ingest_pipeline() -> list[MemoryItem]:
+                try:
+                    with self.tracer.span("fact_extractor", parent=trace) as ext_span:
+                        extraction_result = await self.extractor.extract(logged_episodes)
+                        ext_span.set_output({"facts_extracted": len(extraction_result.facts)})
 
-            for fact, vec in zip(extraction_result.facts, vectors, strict=True):
-                item = MemoryItem(
-                    user_id=clean_user_id,
-                    content=fact.content,
-                    entity=fact.entity,
-                    importance=fact.importance,
-                    confidence=fact.confidence,
-                    event_time=fact.event_time,
-                    source_episode_id=primary_source_id,
-                    status=MemoryStatus.ACTIVE,
-                )
-                saved_item = await self.store.add_memory(item)
-                saved_items.append(saved_item)
+                    if not extraction_result.facts:
+                        trace.set_output({"extracted_facts_count": 0})
+                        trace.end(status="ok")
+                        return []
 
-                payload = {
-                    "content": saved_item.content,
-                    "entity": saved_item.entity,
-                    "importance": saved_item.importance,
-                    "created_at": saved_item.created_at.isoformat(),
-                    "event_time": (
-                        saved_item.event_time.isoformat() if saved_item.event_time else None
-                    ),
-                    "status": saved_item.status.value,
-                }
-                vector_points.append(
-                    VectorPoint(
-                        id=saved_item.id,
-                        vector=vec,
-                        payload=payload,
-                    )
-                )
+                    # Generate embeddings for extracted facts
+                    contents = [f.content for f in extraction_result.facts]
+                    with self.tracer.span(
+                        "embedder", parent=trace, metadata={"fact_count": len(contents)}
+                    ) as emb_span:
+                        vectors = await self.embedder.embed_texts(contents)
+                        emb_span.set_output({"vectors_generated": len(vectors)})
 
-            if vector_points:
-                await self.vector_store.upsert(clean_user_id, vector_points)
+                    saved_items: list[MemoryItem] = []
+                    vector_points: list[VectorPoint] = []
 
-            return saved_items
+                    for fact, vec in zip(extraction_result.facts, vectors, strict=True):
+                        item = MemoryItem(
+                            user_id=clean_user_id,
+                            content=fact.content,
+                            entity=fact.entity,
+                            importance=fact.importance,
+                            confidence=fact.confidence,
+                            event_time=fact.event_time,
+                            source_episode_id=primary_source_id,
+                            status=MemoryStatus.ACTIVE,
+                        )
+                        saved_item = await self.store.add_memory(item)
+                        saved_items.append(saved_item)
 
-        if background:
-            task = asyncio.create_task(_ingest_pipeline())
-            return task
+                        payload = {
+                            "content": saved_item.content,
+                            "entity": saved_item.entity,
+                            "importance": saved_item.importance,
+                            "created_at": saved_item.created_at.isoformat(),
+                            "event_time": (
+                                saved_item.event_time.isoformat() if saved_item.event_time else None
+                            ),
+                            "status": saved_item.status.value,
+                        }
+                        vector_points.append(
+                            VectorPoint(
+                                id=saved_item.id,
+                                vector=vec,
+                                payload=payload,
+                            )
+                        )
 
-        return await _ingest_pipeline()
+                    if vector_points:
+                        with self.tracer.span(
+                            "vector_store",
+                            parent=trace,
+                            metadata={"point_count": len(vector_points)},
+                        ) as vs_span:
+                            await self.vector_store.upsert(clean_user_id, vector_points)
+                            vs_span.set_output({"upserted_points": len(vector_points)})
+
+                    trace.set_output({"extracted_facts_count": len(saved_items)})
+                    trace.end(status="ok")
+                    return saved_items
+                except Exception as exc:
+                    trace.end(status="error", error=exc)
+                    raise
+
+            if background:
+                return asyncio.create_task(_ingest_pipeline())
+
+            return await _ingest_pipeline()
+        except Exception as exc:
+            trace.end(status="error", error=exc)
+            raise
 
     # -------------------------------------------------------------------------
     # Read Path: Search (Milestone 3)
@@ -258,55 +300,94 @@ class MemoryLayer:
             raise ValueError("user_id must be a non-empty string.")
         clean_user_id = user_id.strip()
 
-        # Step 1: Retrieval Router Turn Gating
-        if not bypass_router and not self.router.should_retrieve(query):
-            return SearchResult(
-                context="",
-                memories=[],
-                token_count=0,
-                skipped=True,
-            )
-
-        # Step 2: Hybrid Retrieval (Dense Vector + Sparse BM25)
-        matches = await self.retriever.search(
+        trace = self.tracer.trace(
+            "memory_search",
             user_id=clean_user_id,
-            query=query,
-            limit=limit,
-            status=status,
+            metadata={"query": query, "limit": limit, "token_budget": token_budget},
         )
 
-        if not matches:
+        try:
+            # Step 1: Retrieval Router Turn Gating
+            with self.tracer.span("router", parent=trace) as router_span:
+                should_retrieve = bypass_router or self.router.should_retrieve(query)
+                router_span.set_output(
+                    {"should_retrieve": should_retrieve, "bypassed": bypass_router}
+                )
+
+            if not should_retrieve:
+                trace.set_output({"skipped": True, "token_count": 0, "retrieved_count": 0})
+                trace.end(status="ok")
+                return SearchResult(
+                    context="",
+                    memories=[],
+                    token_count=0,
+                    skipped=True,
+                )
+
+            # Step 2: Hybrid Retrieval (Dense Vector + Sparse BM25)
+            with self.tracer.span("hybrid_retriever", parent=trace) as retriever_span:
+                matches = await self.retriever.search(
+                    user_id=clean_user_id,
+                    query=query,
+                    limit=limit,
+                    status=status,
+                )
+                retriever_span.set_output({"match_count": len(matches)})
+
+            if not matches:
+                trace.set_output({"skipped": False, "token_count": 0, "retrieved_count": 0})
+                trace.end(status="ok")
+                return SearchResult(
+                    context="",
+                    memories=[],
+                    token_count=0,
+                    skipped=False,
+                )
+
+            # Step 3: Multi-Factor Scoring (Similarity + Recency Decay + Importance)
+            with self.tracer.span("scorer", parent=trace) as scorer_span:
+                candidates = [(m.memory, m.combined_score) for m in matches]
+                scored_memories = rank_memories(
+                    candidates,
+                    weights=self.scoring_weights,
+                    limit=limit,
+                )
+                scorer_span.set_output(
+                    {"candidate_count": len(candidates), "scored_count": len(scored_memories)}
+                )
+
+            # Step 4: Context Formatting and Token Budget Packing
+            with self.tracer.span("formatter", parent=trace) as formatter_span:
+                context_str, included_memories, token_count = format_context(
+                    scored_memories,
+                    token_budget=token_budget,
+                )
+                formatter_span.set_output(
+                    {"included_count": len(included_memories), "token_count": token_count}
+                )
+
+            # Step 5: Record Access Telemetry
+            for sm in included_memories:
+                asyncio.create_task(self.store.record_access(clean_user_id, sm.memory.id))
+
+            trace.set_output(
+                {
+                    "skipped": False,
+                    "token_count": token_count,
+                    "retrieved_count": len(included_memories),
+                }
+            )
+            trace.end(status="ok")
+
             return SearchResult(
-                context="",
-                memories=[],
-                token_count=0,
+                context=context_str,
+                memories=included_memories,
+                token_count=token_count,
                 skipped=False,
             )
-
-        # Step 3: Multi-Factor Scoring (Similarity + Recency Decay + Importance)
-        candidates = [(m.memory, m.combined_score) for m in matches]
-        scored_memories = rank_memories(
-            candidates,
-            weights=self.scoring_weights,
-            limit=limit,
-        )
-
-        # Step 4: Context Formatting and Token Budget Packing
-        context_str, included_memories, token_count = format_context(
-            scored_memories,
-            token_budget=token_budget,
-        )
-
-        # Step 5: Record Access Telemetry
-        for sm in included_memories:
-            asyncio.create_task(self.store.record_access(clean_user_id, sm.memory.id))
-
-        return SearchResult(
-            context=context_str,
-            memories=included_memories,
-            token_count=token_count,
-            skipped=False,
-        )
+        except Exception as exc:
+            trace.end(status="error", error=exc)
+            raise
 
     # -------------------------------------------------------------------------
     # Deletion: Privacy & Forget API
@@ -372,8 +453,9 @@ class MemoryLayer:
             self._worker.stop(wait=False)
 
     async def close(self) -> None:
-        """Close database engine, vector store, and background worker."""
+        """Close database engine, vector store, background worker, and flush tracer."""
         if self._worker is not None and self._worker.is_running:
             self._worker.stop(wait=False)
+        self.tracer.flush()
         await self.store.close()
         await self.vector_store.close()
