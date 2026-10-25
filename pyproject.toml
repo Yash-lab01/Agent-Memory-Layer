@@ -8,7 +8,7 @@ version = "0.1.0"
 description = "Durable long-term memory layer for conversational agents, benchmarked on LongMemEval and LoCoMo."
 readme = "README.md"
 requires-python = ">=3.11"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 authors = [
     { name = "Yash Bhawar", email = "yashpbhawar2003@gmail.com" }
 ]
@@ -44,6 +44,14 @@ dependencies = [
     "alembic>=1.13.0",
 ]
 
+[project.urls]
+Homepage = "https://github.com/Yash-lab01/Agent-Memory-Layer"
+Repository = "https://github.com/Yash-lab01/Agent-Memory-Layer"
+Issues = "https://github.com/Yash-lab01/Agent-Memory-Layer/issues"
+
+[project.scripts]
+memlayer-mcp = "memlayer.mcp_server:main"
+
 [project.optional-dependencies]
 postgres = [
     "asyncpg>=0.29.0",
@@ -70,10 +78,22 @@ dev = [
     "ruff>=0.5.0",
     "mypy>=1.10.0",
     "pre-commit>=3.7.0",
+    "build>=1.2.0",
+]
+all = [
+    "agent-memory-layer[postgres,demo,mcp,tracing,eval]",
 ]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/memlayer"]
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src/memlayer",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml",
+]
 
 [tool.ruff]
 target-version = "py311"
