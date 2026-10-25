@@ -123,9 +123,10 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
   - [x] Implement `src/memlayer/mcp_server.py` using Python MCP SDK
   - [x] Expose memory tools (`memlayer_add`, `memlayer_search`, `memlayer_forget`, `memlayer_list`, `memlayer_reset`)
   - [x] MCP tool tests in `tests/test_mcp_server.py`
-- [ ] **Phase 6.3: Observability & Tracing (Langfuse / OpenTelemetry)**
-  - [ ] Implement `src/memlayer/tracing.py`
-  - [ ] Docker Compose Langfuse service integration
+- [x] **Phase 6.3: Observability & Tracing (Langfuse / OpenTelemetry)**
+  - [x] Implement `src/memlayer/tracing.py`
+  - [x] Docker Compose Langfuse service integration
+  - [x] Distributed tracing tests in `tests/test_tracing.py`
 
 ---
 
