@@ -58,6 +58,7 @@ nav:
       - Model Context Protocol (MCP): mcp.md
       - Observability & Tracing: observability.md
   - Python API Reference: api.md
+  - Portfolio & Case Study: PORTFOLIO.md
   - Project Governance:
       - PRD: PRD.md
       - Architecture Decisions (ADRs): DECISIONS.md
@@ -79,3 +80,4 @@ nav:
       - Spec 013 - Observability & Tracing: specs/013-observability-and-tracing.md
       - Spec 014 - Packaging & Release: specs/014-packaging-and-release-readiness.md
       - Spec 015 - Recruiter-Ready Docs: specs/015-recruiter-ready-documentation.md
+      - Spec 016 - Portfolio & Interview Guide: specs/016-portfolio-case-study-and-interview-guide.md
