@@ -97,23 +97,33 @@ Use this script during live technical screens or recorded video walkthroughs:
 import asyncio
 from memlayer import MemoryLayer
 
+
 async def demonstrate_memory():
     # Initialize MemoryLayer with in-memory stores
     mem = await MemoryLayer.create_local(vector_dim=64)
 
     # Turn 1: User introduces initial state
     print("--- Session 1: Initial State ---")
-    await mem.add("demo_user", [
-        {"role": "user", "content": "I live in Pune and I work primarily with Go."},
-        {"role": "assistant", "content": "Nice to meet you! Go is great for microservices."}
-    ])
+    await mem.add(
+        "demo_user",
+        [
+            {"role": "user", "content": "I live in Pune and I work primarily with Go."},
+            {"role": "assistant", "content": "Nice to meet you! Go is great for microservices."},
+        ],
+    )
 
     # Turn 2: User updates state (state transition)
     print("\n--- Session 2: State Update (2 weeks later) ---")
-    await mem.add("demo_user", [
-        {"role": "user", "content": "I relocated to Bangalore and shifted my stack to Rust."},
-        {"role": "assistant", "content": "Exciting move to Bangalore! Rust is awesome for systems."}
-    ])
+    await mem.add(
+        "demo_user",
+        [
+            {"role": "user", "content": "I relocated to Bangalore and shifted my stack to Rust."},
+            {
+                "role": "assistant",
+                "content": "Exciting move to Bangalore! Rust is awesome for systems.",
+            },
+        ],
+    )
 
     # Turn 3: Querying the active memory
     print("\n--- Session 3: Querying Current State ---")
@@ -122,6 +132,7 @@ async def demonstrate_memory():
     # Output clearly contains Bangalore and Rust, with Pune marked superseded
 
     await mem.close()
+
 
 if __name__ == "__main__":
     asyncio.run(demonstrate_memory())
