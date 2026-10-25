@@ -69,3 +69,7 @@ eval/data/raw/
 *.swo
 .DS_Store
 Thumbs.db
+
+# Agent skills & local metadata
+.agents/
+skills-lock.json
