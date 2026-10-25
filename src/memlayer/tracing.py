@@ -75,14 +75,16 @@ class SpanContext(
 class NullSpan(SpanContext):
     """Zero-overhead no-op span for when tracing is disabled."""
 
-    def set_attribute(self, _key: str, _value: Any) -> SpanContext:
+    def set_attribute(self, key: str, value: Any) -> SpanContext:
+        del key, value
         return self
 
-    def set_output(self, _output: Any) -> SpanContext:
+    def set_output(self, output: Any) -> SpanContext:
+        del output
         return self
 
-    def end(self, _status: str = "ok", _error: Exception | None = None) -> None:
-        pass
+    def end(self, status: str = "ok", error: Exception | None = None) -> None:
+        del status, error
 
 
 class RecordedSpan(SpanContext):
@@ -157,19 +159,21 @@ class NullTracer(BaseTracer):
 
     def trace(
         self,
-        _name: str,
-        _user_id: str,
-        _session_id: str = "default",
-        _metadata: dict[str, Any] | None = None,
+        name: str,
+        user_id: str,
+        session_id: str = "default",
+        metadata: dict[str, Any] | None = None,
     ) -> SpanContext:
+        del name, user_id, session_id, metadata
         return NullSpan()
 
     def span(
         self,
-        _name: str,
-        _parent: SpanContext | None = None,
-        _metadata: dict[str, Any] | None = None,
+        name: str,
+        parent: SpanContext | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> SpanContext:
+        del name, parent, metadata
         return NullSpan()
 
     def flush(self) -> None:
