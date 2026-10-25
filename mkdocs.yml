@@ -1,0 +1,81 @@
+site_name: Agent Memory Layer
+site_description: Durable long-term memory layer for conversational AI agents.
+site_author: Yash Bhawar
+site_url: https://yash-lab01.github.io/Agent-Memory-Layer/
+repo_name: Yash-lab01/Agent-Memory-Layer
+repo_url: https://github.com/Yash-lab01/Agent-Memory-Layer
+
+theme:
+  name: material
+  language: en
+  palette:
+    - scheme: slate
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: teal
+      accent: cyan
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+
+nav:
+  - Overview: index.md
+  - Architecture: ARCHITECTURE.md
+  - Benchmarks & Evaluation:
+      - Executive Summary: benchmarks.md
+      - Detailed Evaluation Report: EVALUATION_REPORT.md
+  - Integrations:
+      - Model Context Protocol (MCP): mcp.md
+      - Observability & Tracing: observability.md
+  - Python API Reference: api.md
+  - Project Governance:
+      - PRD: PRD.md
+      - Architecture Decisions (ADRs): DECISIONS.md
+      - Project Plan: PROJECT_PLAN.md
+      - Roadmap: ROADMAP.md
+  - Specifications:
+      - Spec 001 - Write Path API: specs/001-write-path-api.md
+      - Spec 002 - Hybrid Retrieval: specs/002-hybrid-retrieval.md
+      - Spec 003 - Multi-Factor Scoring: specs/003-multi-factor-scoring.md
+      - Spec 004 - Router & Search API: specs/004-router-and-search-api.md
+      - Spec 005 - Contradiction & Supersession: specs/005-contradiction-and-supersession.md
+      - Spec 006 - Deduplication Engine: specs/006-deduplication-engine.md
+      - Spec 007 - Memory Decay & Forgetting: specs/007-memory-decay-and-forgetting.md
+      - Spec 008 - Consolidation Worker: specs/008-background-consolidation-worker.md
+      - Spec 009 - Benchmark Harness & Baselines: specs/009-benchmark-harness-and-baselines.md
+      - Spec 010 - Benchmark Execution & Ablations: specs/010-benchmark-execution-and-ablations.md
+      - Spec 011 - FastAPI Service & Demo: specs/011-fastapi-service-and-interactive-demo.md
+      - Spec 012 - MCP Server: specs/012-mcp-server.md
+      - Spec 013 - Observability & Tracing: specs/013-observability-and-tracing.md
+      - Spec 014 - Packaging & Release: specs/014-packaging-and-release-readiness.md
+      - Spec 015 - Recruiter-Ready Docs: specs/015-recruiter-ready-documentation.md
