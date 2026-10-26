@@ -81,3 +81,4 @@ nav:
       - Spec 014 - Packaging & Release: specs/014-packaging-and-release-readiness.md
       - Spec 015 - Recruiter-Ready Docs: specs/015-recruiter-ready-documentation.md
       - Spec 016 - Portfolio & Interview Guide: specs/016-portfolio-case-study-and-interview-guide.md
+      - Spec 017 - Knowledge Graph Layer: specs/017-knowledge-graph-layer.md
