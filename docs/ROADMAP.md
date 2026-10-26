@@ -143,6 +143,14 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
 ---
 
 ## Milestone 8 (v2 Stretch Items)
-- [ ] **Phase 8.1:** Knowledge Graph Layer (`Kùzu` / `NetworkX`)
+- [x] **Phase 8.1: Knowledge Graph Layer (`InMemoryGraphStore` / `NetworkX`, Spec 017)**
+  - [x] Abstract `GraphStoreBase` interface in `src/memlayer/store/graph_base.py`
+  - [x] Zero-dependency `InMemoryGraphStore` with multi-hop BFS pathfinding
+  - [x] `NetworkXGraphStore` adapter with centrality analysis via `agent-memory-layer[graph]`
+  - [x] `EntityNode`, `RelationEdge`, `GraphTriplet` Pydantic models in `src/memlayer/models.py`
+  - [x] Subgraph context formatting in `src/memlayer/retrieve/format.py`
+  - [x] `MemoryLayer` integration (`add_triplet`, `get_graph_context`, search injection, tenant-scoped purge)
+  - [x] 12 comprehensive unit and integration tests in `tests/test_graph_store.py`
 - [ ] **Phase 8.2:** Memory Inspector UI (Next.js)
 - [ ] **Phase 8.3:** WanderAI Integration Demo
+
