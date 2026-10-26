@@ -15,12 +15,13 @@ from memlayer.consolidate.dedup import DeduplicationEngine
 from memlayer.consolidate.worker import ConsolidationWorker
 from memlayer.extract.extractor import FactExtractor
 from memlayer.llm.embedder import BaseEmbedder, MockEmbedder
-from memlayer.models import Episode, MemoryItem, MemoryStatus, SearchResult
-from memlayer.retrieve.format import format_context
+from memlayer.models import Episode, MemoryItem, MemoryStatus, RelationEdge, SearchResult
+from memlayer.retrieve.format import format_context, format_subgraph_context
 from memlayer.retrieve.hybrid import HybridRetriever
 from memlayer.retrieve.router import RetrievalRouter
 from memlayer.retrieve.scoring import ScoringWeights, rank_memories
 from memlayer.store.episodes import EpisodeStore
+from memlayer.store.graph_base import GraphStoreBase
 from memlayer.store.sql import SQLStore
 from memlayer.store.vector import QdrantVectorStore
 from memlayer.store.vector_base import VectorPoint, VectorStoreBase
@@ -44,11 +45,13 @@ class MemoryLayer:
         router: RetrievalRouter | None = None,
         retriever: HybridRetriever | None = None,
         scoring_weights: ScoringWeights | None = None,
+        graph_store: GraphStoreBase | None = None,
         tracer: BaseTracer | None = None,
     ) -> None:
         """Initialize MemoryLayer with explicit storage and model backends."""
         self.store = store
         self.vector_store = vector_store
+        self.graph_store = graph_store
         self.embedder = embedder
         self.extractor = extractor or FactExtractor()
         self.episode_logger = episode_logger or EpisodeStore(store)
@@ -71,6 +74,7 @@ class MemoryLayer:
         extractor: FactExtractor | None = None,
         router: RetrievalRouter | None = None,
         scoring_weights: ScoringWeights | None = None,
+        graph_store: GraphStoreBase | None = None,
         tracer: BaseTracer | None = None,
     ) -> MemoryLayer:
         """Create a self-contained in-memory MemoryLayer instance for testing and local usage."""
@@ -89,6 +93,7 @@ class MemoryLayer:
         return cls(
             store=store,
             vector_store=vector_store,
+            graph_store=graph_store,
             embedder=actual_embedder,
             extractor=extractor or FactExtractor(),
             router=router,
@@ -282,6 +287,7 @@ class MemoryLayer:
         token_budget: int | None = None,
         bypass_router: bool = False,
         status: MemoryStatus | None = MemoryStatus.ACTIVE,
+        include_graph: bool = True,
     ) -> SearchResult:
         """Search memories relevant to query within an optional token budget.
 
@@ -292,6 +298,7 @@ class MemoryLayer:
             token_budget: Maximum tokens allowed for formatted prompt context.
             bypass_router: If True, forces retrieval even on trivial turns.
             status: Optional memory status filter (default: ACTIVE).
+            include_graph: If True and graph_store is present, augments context with subgraphs.
 
         Returns:
             SearchResult with formatted context string, scored memories, token count, and skipped status.
@@ -362,6 +369,29 @@ class MemoryLayer:
                     scored_memories,
                     token_budget=token_budget,
                 )
+                if self.graph_store is not None and include_graph:
+                    query_entities = [
+                        sm.memory.entity
+                        for sm in included_memories
+                        if sm.memory.entity and sm.memory.entity.lower() not in {"user", "none"}
+                    ]
+                    candidate_entities = list(dict.fromkeys(query_entities + query.split()))
+                    remaining_budget = (
+                        (token_budget - token_count) if token_budget is not None else None
+                    )
+                    if remaining_budget is None or remaining_budget > 10:
+                        nodes, edges = await self.graph_store.get_subgraph(
+                            clean_user_id, candidate_entities, max_depth=2
+                        )
+                        graph_ctx, graph_tokens = format_subgraph_context(
+                            nodes, edges, token_budget=remaining_budget
+                        )
+                        if graph_ctx:
+                            context_str = (
+                                f"{context_str}\n\n{graph_ctx}" if context_str else graph_ctx
+                            )
+                            token_count += graph_tokens
+
                 formatter_span.set_output(
                     {"included_count": len(included_memories), "token_count": token_count}
                 )
@@ -390,6 +420,53 @@ class MemoryLayer:
             raise
 
     # -------------------------------------------------------------------------
+    # Knowledge Graph Operations
+    # -------------------------------------------------------------------------
+
+    async def add_triplet(
+        self,
+        user_id: str,
+        source: str,
+        relation: str,
+        target: str,
+        weight: float = 1.0,
+        properties: dict[str, Any] | None = None,
+    ) -> RelationEdge:
+        """Add a semantic relationship triplet to the user's knowledge graph."""
+        if self.graph_store is None:
+            raise RuntimeError("Cannot add triplet: no graph_store configured on MemoryLayer.")
+        clean_user_id = user_id.strip()
+        if not clean_user_id:
+            raise ValueError("user_id must be a non-empty string.")
+        edge = RelationEdge(
+            user_id=clean_user_id,
+            source=source,
+            relation=relation,
+            target=target,
+            weight=weight,
+            properties=properties or {},
+        )
+        return await self.graph_store.add_edge(clean_user_id, edge)
+
+    async def get_graph_context(
+        self,
+        user_id: str,
+        entities: Sequence[str],
+        max_depth: int = 2,
+        token_budget: int | None = None,
+    ) -> tuple[str, int]:
+        """Retrieve and format a multi-hop subgraph context surrounding the specified entities."""
+        if self.graph_store is None or not entities:
+            return "", 0
+        clean_user_id = user_id.strip()
+        if not clean_user_id:
+            raise ValueError("user_id must be a non-empty string.")
+        nodes, edges = await self.graph_store.get_subgraph(
+            clean_user_id, entities, max_depth=max_depth
+        )
+        return format_subgraph_context(nodes, edges, token_budget=token_budget)
+
+    # -------------------------------------------------------------------------
     # Deletion: Privacy & Forget API
     # -------------------------------------------------------------------------
 
@@ -404,13 +481,15 @@ class MemoryLayer:
         return sql_deleted
 
     async def forget_all(self, user_id: str) -> int:
-        """Purge all episodes and memories for a user across all stores (GDPR)."""
+        """Purge all episodes, memories, and graph data for a user across all stores (GDPR)."""
         if not user_id or not user_id.strip():
             raise ValueError("user_id must be a non-empty string.")
         clean_user_id = user_id.strip()
 
         sql_count = int(await self.store.delete_user_data(clean_user_id))
         await self.vector_store.delete_user_vectors(clean_user_id)
+        if self.graph_store is not None:
+            await self.graph_store.delete_user_graph(clean_user_id)
         return sql_count
 
     # -------------------------------------------------------------------------
@@ -453,9 +532,11 @@ class MemoryLayer:
             self._worker.stop(wait=False)
 
     async def close(self) -> None:
-        """Close database engine, vector store, background worker, and flush tracer."""
+        """Close database engine, vector store, graph store, background worker, and flush tracer."""
         if self._worker is not None and self._worker.is_running:
             self._worker.stop(wait=False)
         self.tracer.flush()
         await self.store.close()
         await self.vector_store.close()
+        if self.graph_store is not None:
+            await self.graph_store.close()
