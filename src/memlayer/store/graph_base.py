@@ -1,6 +1,7 @@
 """Abstract interface for pluggable knowledge graph storage backends."""
 
 from abc import ABC, abstractmethod
+from collections.abc import Sequence
 
 from memlayer.models import EntityNode, RelationEdge
 
@@ -38,7 +39,7 @@ class GraphStoreBase(ABC):
 
     @abstractmethod
     async def get_subgraph(
-        self, user_id: str, entities: list[str], max_depth: int = 2
+        self, user_id: str, entities: Sequence[str], max_depth: int = 2
     ) -> tuple[list[EntityNode], list[RelationEdge]]:
         """Extract multi-hop neighborhood subgraph surrounding the specified entities."""
 
