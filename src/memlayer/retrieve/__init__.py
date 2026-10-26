@@ -1,7 +1,12 @@
 """Retrieval module for semantic, keyword, and hybrid search with multi-factor scoring."""
 
 from memlayer.retrieve.bm25 import BM25Hit, BM25Index, tokenize
-from memlayer.retrieve.format import estimate_tokens, format_context, format_memory_line
+from memlayer.retrieve.format import (
+    estimate_tokens,
+    format_context,
+    format_memory_line,
+    format_subgraph_context,
+)
 from memlayer.retrieve.hybrid import HybridMatch, HybridRetriever
 from memlayer.retrieve.router import RetrievalRouter, RoutingDecision
 from memlayer.retrieve.scoring import (
@@ -23,6 +28,7 @@ __all__ = [
     "estimate_tokens",
     "format_context",
     "format_memory_line",
+    "format_subgraph_context",
     "rank_memories",
     "score_memory",
     "tokenize",

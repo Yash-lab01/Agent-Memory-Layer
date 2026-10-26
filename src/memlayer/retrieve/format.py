@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 
-from memlayer.models import ScoredMemory
+from memlayer.models import EntityNode, RelationEdge, ScoredMemory
 
 
 def estimate_tokens(text: str) -> int:
@@ -62,3 +62,37 @@ def format_context(
 
     formatted_context = "\n".join(lines)
     return formatted_context, included, current_tokens
+
+
+def format_subgraph_context(
+    nodes: Sequence[EntityNode],
+    edges: Sequence[RelationEdge],
+    token_budget: int | None = None,
+) -> tuple[str, int]:
+    """Format relational knowledge graph edges and entity nodes into context markdown.
+
+    Produces output formatted as:
+    [Knowledge Graph Relationships]
+    - Alice --(WORKS_ON)--> Project Apollo
+    - Project Apollo --(MANAGED_BY)--> Bob
+    """
+    del nodes  # Reserved for entity attribute expansions
+    if not edges:
+        return "", 0
+
+    lines: list[str] = ["[Knowledge Graph Relationships]"]
+    current_tokens = estimate_tokens(lines[0])
+
+    for edge in edges:
+        line = f"- {edge.source} --({edge.relation})--> {edge.target}"
+        line_tokens = estimate_tokens(line)
+        if token_budget is not None and (current_tokens + line_tokens) > token_budget:
+            break
+        lines.append(line)
+        current_tokens += line_tokens
+
+    if len(lines) == 1:
+        return "", 0
+
+    formatted_context = "\n".join(lines)
+    return formatted_context, current_tokens
