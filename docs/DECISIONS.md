@@ -40,3 +40,13 @@ This log documents key architectural choices, tradeoffs, rejected alternatives, 
 - **Alternatives rejected:**
   - *Optional / global namespaces:* High risk of accidental privacy leakage in shared agent environments.
 - **Consequences:** Zero API calls can execute without a validated `user_id`.
+
+---
+
+## 005. Knowledge Graph Layer Architecture: Pluggable Adapter with Zero-Dependency Default (2026-10-26)
+- **Context:** To support multi-hop compositional reasoning across entities (e.g. `(Alice)-[WORKS_ON]->(Project)-[MANAGED_BY]->(Bob)`), `memlayer` requires graph storage. We need to support local lightweight execution without requiring external graph database daemons (like Neo4j) or C++ binaries.
+- **Decision:** Define an abstract `GraphStoreBase` interface in `src/memlayer/store/graph_base.py`. Provide an in-memory, pure-Python adjacency store (`InMemoryGraphStore`) with BFS/DFS multi-hop pathfinding as the zero-overhead default. Support `NetworkX` (`NetworkXGraphStore`) via an optional extra (`agent-memory-layer[graph]`).
+- **Alternatives rejected:**
+  - *Hardcoding Neo4j / Memgraph:* Requires heavyweight Docker containers or cloud services for basic unit tests and local execution.
+  - *Hardcoding Kùzu:* While embedded and fast, C++ binary compilation can fail on non-standard architectures, violating minimal-dependency requirements.
+- **Consequences:** Core `memlayer` remains lightweight and fast. Advanced graph analytics (centrality, clustering) can be enabled via optional extras. All graph reads and writes remain strictly scoped by `user_id`.
