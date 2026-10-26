@@ -76,6 +76,9 @@ docs = [
     "mkdocs>=1.6.0",
     "mkdocs-material>=9.5.0",
 ]
+graph = [
+    "networkx>=3.0",
+]
 dev = [
     "pytest>=8.0.0",
     "pytest-asyncio>=0.23.0",
@@ -85,7 +88,7 @@ dev = [
     "build>=1.2.0",
 ]
 all = [
-    "agent-memory-layer[postgres,demo,mcp,tracing,eval,docs]",
+    "agent-memory-layer[postgres,demo,mcp,tracing,eval,docs,graph]",
 ]
 
 [tool.hatch.build.targets.wheel]
