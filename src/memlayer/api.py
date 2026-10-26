@@ -342,12 +342,39 @@ class MemoryLayer:
                 retriever_span.set_output({"match_count": len(matches)})
 
             if not matches:
-                trace.set_output({"skipped": False, "token_count": 0, "retrieved_count": 0})
+                graph_ctx = ""
+                graph_tokens = 0
+                if self.graph_store is not None and include_graph:
+                    candidate_entities = list(dict.fromkeys(query.split()))
+                    nodes, edges = await self.graph_store.get_subgraph(
+                        clean_user_id, candidate_entities, max_depth=2
+                    )
+                    graph_ctx, graph_tokens = format_subgraph_context(
+                        nodes, edges, token_budget=token_budget
+                    )
+
+                if not graph_ctx:
+                    trace.set_output({"skipped": False, "token_count": 0, "retrieved_count": 0})
+                    trace.end(status="ok")
+                    return SearchResult(
+                        context="",
+                        memories=[],
+                        token_count=0,
+                        skipped=False,
+                    )
+
+                trace.set_output(
+                    {
+                        "skipped": False,
+                        "token_count": graph_tokens,
+                        "retrieved_count": 0,
+                    }
+                )
                 trace.end(status="ok")
                 return SearchResult(
-                    context="",
+                    context=graph_ctx,
                     memories=[],
-                    token_count=0,
+                    token_count=graph_tokens,
                     skipped=False,
                 )
 
