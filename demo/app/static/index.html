@@ -65,6 +65,10 @@
       <span class="metric-label">Superseded Facts</span>
       <span class="metric-value accent-rose" id="val-superseded-count">0</span>
     </div>
+    <div class="metric-card" id="card-graph-relations">
+      <span class="metric-label">Graph Relations</span>
+      <span class="metric-value accent-indigo" id="val-graph-relations">0</span>
+    </div>
     <div class="metric-card" id="card-last-prompt-tokens">
       <span class="metric-label">Last Prompt Tokens</span>
       <span class="metric-value accent-cyan" id="val-prompt-tokens">0</span>
@@ -105,6 +109,9 @@
         <button class="btn-pill" id="btn-scenario-rust" data-text="We migrated our architecture to Rust." data-session="session_2">
           5. Migrate to Rust
         </button>
+        <button class="btn-pill" id="btn-scenario-graph" data-text="Who manages Project Apollo and where is Carol located?" data-session="session_3">
+          6. Multi-Hop Graph Query
+        </button>
       </div>
 
       <!-- Messages Stream -->
@@ -118,7 +125,7 @@
             This demo demonstrates durable memory across sessions. When <strong>Memory ON</strong> is active, atomic facts are asynchronously extracted, ranked using recency & importance scoring, and older conflicting facts are non-destructively marked <code>superseded</code>.
           </p>
           <p>
-            Toggle <strong>Memory OFF</strong> at any time to compare against a standard stateless LLM!
+            The <strong>Knowledge Graph</strong> tab visualizes entity relationships and enables multi-hop relational pathfinding across conversational sessions!
           </p>
         </div>
       </div>
@@ -129,7 +136,7 @@
           id="chat-input"
           class="chat-textarea"
           rows="2"
-          placeholder="Type a message (e.g. 'I just moved to Austin, Texas' or 'Where do I live?')..."
+          placeholder="Type a message (e.g. 'Who reports to Carol?' or 'Where do I live?')..."
         ></textarea>
         <button id="btn-send" class="btn-primary">
           <span class="btn-text">Send</span>
@@ -138,7 +145,7 @@
       </div>
     </section>
 
-    <!-- Right Panel: Live Memory Inspector -->
+    <!-- Right Panel: Live Memory & Knowledge Graph Inspector -->
     <section class="panel inspector-panel" id="panel-inspector">
       <div class="panel-header">
         <div class="panel-title-wrapper">
@@ -151,13 +158,16 @@
         </div>
       </div>
 
-      <!-- Tabs: Active vs Superseded -->
+      <!-- Tabs: Active vs Superseded vs Knowledge Graph -->
       <div class="inspector-tabs">
         <button class="tab-btn active" id="tab-active" data-tab="active">
           Active Facts (<span id="tab-active-count">0</span>)
         </button>
         <button class="tab-btn" id="tab-superseded" data-tab="superseded">
           Superseded History (<span id="tab-superseded-count">0</span>)
+        </button>
+        <button class="tab-btn" id="tab-graph" data-tab="graph">
+          Knowledge Graph (<span id="tab-graph-count">0</span>)
         </button>
       </div>
 
@@ -184,9 +194,91 @@
             </div>
           </div>
         </div>
+
+        <!-- Knowledge Graph Visualizer View -->
+        <div class="tab-pane" id="pane-graph">
+          <!-- Graph Toolbar -->
+          <div class="graph-toolbar">
+            <div class="graph-toolbar-row">
+              <div class="toolbar-btn-group">
+                <button id="btn-open-add-triplet" class="btn-primary-sm" title="Add a new entity relation triplet">
+                  + Add Triplet
+                </button>
+                <button id="btn-fit-graph" class="btn-ghost-sm" title="Center and fit graph in view">
+                  Fit View
+                </button>
+                <button id="btn-clear-graph" class="btn-danger-ghost-sm" title="Purge knowledge graph for user">
+                  Reset Graph
+                </button>
+              </div>
+              <div class="graph-legend">
+                <span class="legend-item"><span class="legend-dot dot-person"></span>Person</span>
+                <span class="legend-item"><span class="legend-dot dot-project"></span>Project</span>
+                <span class="legend-item"><span class="legend-dot dot-tech"></span>Tech</span>
+                <span class="legend-item"><span class="legend-dot dot-location"></span>Location</span>
+              </div>
+            </div>
+
+            <!-- Path Finder Bar -->
+            <div class="path-finder-bar">
+              <span class="path-label">Multi-Hop Path:</span>
+              <input type="text" id="input-path-source" class="input-graph-sm" list="graph-nodes-datalist" placeholder="Source entity (e.g. Alice)" />
+              <span class="path-arrow">&rarr;</span>
+              <input type="text" id="input-path-target" class="input-graph-sm" list="graph-nodes-datalist" placeholder="Target entity (e.g. Seattle)" />
+              <button id="btn-find-path" class="btn-accent-sm">Find Path</button>
+              <button id="btn-clear-path" class="btn-ghost-sm">Clear</button>
+              <datalist id="graph-nodes-datalist"></datalist>
+            </div>
+            <div id="path-result-banner" class="path-result-banner" style="display: none;"></div>
+          </div>
+
+          <!-- Interactive Canvas Container -->
+          <div class="graph-canvas-container" id="graph-container">
+            <canvas id="graph-canvas"></canvas>
+            <!-- Selected Entity Info Drawer / Tooltip -->
+            <div id="graph-node-details" class="graph-node-details" style="display: none;">
+              <div class="node-detail-header">
+                <span class="node-detail-title" id="detail-node-name">Entity</span>
+                <span class="entity-pill" id="detail-node-type">Node</span>
+                <button class="btn-close-sm" id="btn-close-node-details">&times;</button>
+              </div>
+              <div class="node-detail-body" id="detail-node-relations"></div>
+            </div>
+            <!-- Canvas Hint -->
+            <div class="canvas-hint">Drag nodes to reposition &bull; Click to inspect relations</div>
+          </div>
+        </div>
       </div>
     </section>
   </main>
+
+  <!-- Add Triplet Modal -->
+  <div id="modal-add-triplet" class="modal-backdrop" style="display: none;">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">Add Knowledge Graph Triplet</h3>
+        <button id="btn-close-triplet-modal" class="modal-close">&times;</button>
+      </div>
+      <form id="form-add-triplet" class="modal-form">
+        <div class="form-group">
+          <label for="triplet-source">Source Entity:</label>
+          <input type="text" id="triplet-source" class="input-glass" placeholder="e.g. Alice, Project Apollo" required />
+        </div>
+        <div class="form-group">
+          <label for="triplet-relation">Relationship (Predicate):</label>
+          <input type="text" id="triplet-relation" class="input-glass" placeholder="e.g. WORKS_ON, REPORTS_TO, LOCATED_IN, USES_TECH" required />
+        </div>
+        <div class="form-group">
+          <label for="triplet-target">Target Entity:</label>
+          <input type="text" id="triplet-target" class="input-glass" placeholder="e.g. Project Apollo, Carol, Seattle" required />
+        </div>
+        <div class="modal-actions">
+          <button type="button" id="btn-cancel-triplet" class="btn-ghost">Cancel</button>
+          <button type="submit" class="btn-primary">Add Triplet</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <script src="/static/app.js"></script>
 </body>
