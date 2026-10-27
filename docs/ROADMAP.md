@@ -151,6 +151,12 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
   - [x] Subgraph context formatting in `src/memlayer/retrieve/format.py`
   - [x] `MemoryLayer` integration (`add_triplet`, `get_graph_context`, search injection, tenant-scoped purge)
   - [x] 12 comprehensive unit and integration tests in `tests/test_graph_store.py`
-- [ ] **Phase 8.2:** Memory Inspector UI (Next.js)
+- [x] **Phase 8.2: Memory Inspector UI & Knowledge Graph Visualizer (Spec 018)**
+  - [x] Interactive 3-tab Inspector (Active facts, Superseded history, Knowledge Graph)
+  - [x] Zero-dependency Canvas force-directed graph layout with high-DPI scaling and node dragging
+  - [x] Multi-hop path finding UI connecting entities with highlighted hops and breadcrumbs
+  - [x] Triplet creation modal and tenant-scoped graph reset
+  - [x] FastAPI graph endpoints (`/api/graph`, `/api/graph/triplets`, `/api/graph/paths`, `DELETE /api/graph`)
+  - [x] End-to-end integration tests in `tests/test_demo.py`
 - [ ] **Phase 8.3:** WanderAI Integration Demo
 
