@@ -24,6 +24,7 @@ from memlayer.consolidate.conflicts import ConflictDetector
 from memlayer.extract.extractor import FactExtractor
 from memlayer.llm.embedder import BaseEmbedder, MockEmbedder
 from memlayer.models import Episode, ExtractedFact, ExtractionResult, MemoryItem, Role
+from memlayer.store.graph_memory import InMemoryGraphStore
 from memlayer.store.sql import SQLStore
 from memlayer.store.vector import QdrantVectorStore
 
@@ -171,13 +172,27 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
     vector_store = QdrantVectorStore(location=":memory:", vector_size=64)
     await vector_store.init_store()
 
+    graph_store = InMemoryGraphStore()
+
     extractor = DemoFactExtractor()
     memlayer = MemoryLayer(
         store=store,
         vector_store=vector_store,
+        graph_store=graph_store,
         embedder=embedder,
         extractor=extractor,
     )
+
+    # Seed default sample triplets for demo_user to showcase multi-hop graph inspector
+    demo_triplets = [
+        ("Alice", "WORKS_ON", "Project Apollo"),
+        ("Project Apollo", "MANAGED_BY", "Bob"),
+        ("Bob", "REPORTS_TO", "Carol"),
+        ("Project Apollo", "USES_TECH", "Rust"),
+        ("Carol", "LOCATED_IN", "Seattle"),
+    ]
+    for src, rel, tgt in demo_triplets:
+        await memlayer.add_triplet("demo_user", src, rel, tgt)
 
     async def _conflict_completion(*_args: Any, **kwargs: Any) -> Any:
         # Heuristic fallback for offline conflict detection
@@ -228,6 +243,7 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
 
     GLOBAL_STATE["store"] = store
     GLOBAL_STATE["vector_store"] = vector_store
+    GLOBAL_STATE["graph_store"] = graph_store
     GLOBAL_STATE["memlayer"] = memlayer
     GLOBAL_STATE["conflict_detector"] = conflict_detector
 
@@ -291,6 +307,7 @@ class ChatResponse(BaseModel):
     memory_enabled: bool
     retrieved_memories: list[RetrievedMemoryItem]
     context_used: str
+    graph_context: str = ""
     prompt_tokens: int
     completion_tokens: int
     latency_ms: float
@@ -309,6 +326,50 @@ class MemoryItemDTO(BaseModel):
     superseded_by: str | None
     created_at: str
     access_count: int
+
+
+class GraphNodeDTO(BaseModel):
+    """Knowledge graph vertex representation."""
+
+    id: str
+    name: str
+    entity_type: str
+    properties: dict[str, Any] = Field(default_factory=dict)
+
+
+class GraphEdgeDTO(BaseModel):
+    """Knowledge graph directed relationship edge."""
+
+    id: str
+    source: str
+    target: str
+    relation: str
+    weight: float
+    properties: dict[str, Any] = Field(default_factory=dict)
+
+
+class GraphDataResponse(BaseModel):
+    """Topology payload for the knowledge graph visualizer."""
+
+    nodes: list[GraphNodeDTO]
+    edges: list[GraphEdgeDTO]
+
+
+class CreateTripletRequest(BaseModel):
+    """Payload to add a relationship triplet to the user's graph."""
+
+    user_id: str = Field(default="demo_user", min_length=1)
+    source: str = Field(..., min_length=1)
+    relation: str = Field(..., min_length=1)
+    target: str = Field(..., min_length=1)
+    weight: float = Field(default=1.0, ge=0.0, le=1.0)
+    properties: dict[str, Any] = Field(default_factory=dict)
+
+
+class PathResultDTO(BaseModel):
+    """A discovered multi-hop path between entities."""
+
+    path: list[GraphEdgeDTO]
 
 
 # -----------------------------------------------------------------------------
@@ -427,11 +488,18 @@ async def chat(req: ChatRequest) -> ChatResponse:
 
     latency_ms = round((time.perf_counter() - start_time) * 1000, 2)
 
+    graph_context = ""
+    if "[Knowledge Graph Relationships]" in context_used:
+        parts = context_used.split("[Knowledge Graph Relationships]")
+        if len(parts) > 1:
+            graph_context = "[Knowledge Graph Relationships]" + parts[1]
+
     return ChatResponse(
         reply=reply,
         memory_enabled=req.memory_enabled,
         retrieved_memories=retrieved_items,
         context_used=context_used,
+        graph_context=graph_context,
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
         latency_ms=latency_ms,
@@ -487,6 +555,103 @@ async def reset_store(
     memlayer: MemoryLayer = GLOBAL_STATE["memlayer"]
     count = await memlayer.forget_all(user_id=user_id)
     return {"success": True, "user_id": user_id, "purged_records": count}
+
+
+@app.get("/api/graph", response_model=GraphDataResponse)
+async def get_graph(
+    user_id: str = Query(default="demo_user", min_length=1),
+) -> GraphDataResponse:
+    """Retrieve all entity vertices and relation edges in the user's knowledge graph."""
+    graph_store: InMemoryGraphStore = GLOBAL_STATE["graph_store"]
+    clean_user = user_id.strip()
+    user_nodes = graph_store._nodes.get(clean_user, {})
+    user_edges = graph_store._edges.get(clean_user, [])
+
+    return GraphDataResponse(
+        nodes=[
+            GraphNodeDTO(
+                id=n.id,
+                name=n.name,
+                entity_type=n.entity_type,
+                properties=n.properties,
+            )
+            for n in user_nodes.values()
+        ],
+        edges=[
+            GraphEdgeDTO(
+                id=e.id,
+                source=e.source,
+                target=e.target,
+                relation=e.relation,
+                weight=e.weight,
+                properties=e.properties,
+            )
+            for e in user_edges
+        ],
+    )
+
+
+@app.post("/api/graph/triplets", response_model=GraphEdgeDTO)
+async def add_triplet(req: CreateTripletRequest) -> GraphEdgeDTO:
+    """Insert a new relationship triplet into the user's knowledge graph."""
+    memlayer: MemoryLayer = GLOBAL_STATE["memlayer"]
+    clean_user = req.user_id.strip()
+    edge = await memlayer.add_triplet(
+        user_id=clean_user,
+        source=req.source,
+        relation=req.relation,
+        target=req.target,
+        weight=req.weight,
+        properties=req.properties,
+    )
+    return GraphEdgeDTO(
+        id=edge.id,
+        source=edge.source,
+        target=edge.target,
+        relation=edge.relation,
+        weight=edge.weight,
+        properties=edge.properties,
+    )
+
+
+@app.get("/api/graph/paths", response_model=list[PathResultDTO])
+async def find_graph_paths(
+    user_id: str = Query(default="demo_user", min_length=1),
+    source: str = Query(..., min_length=1),
+    target: str = Query(..., min_length=1),
+    max_depth: int = Query(default=3, ge=1, le=5),
+) -> list[PathResultDTO]:
+    """Find multi-hop relation paths connecting two entities within max_depth."""
+    graph_store: InMemoryGraphStore = GLOBAL_STATE["graph_store"]
+    clean_user = user_id.strip()
+    paths = await graph_store.find_paths(clean_user, source, target, max_depth=max_depth)
+    return [
+        PathResultDTO(
+            path=[
+                GraphEdgeDTO(
+                    id=e.id,
+                    source=e.source,
+                    target=e.target,
+                    relation=e.relation,
+                    weight=e.weight,
+                    properties=e.properties,
+                )
+                for e in p
+            ]
+        )
+        for p in paths
+    ]
+
+
+@app.delete("/api/graph")
+async def delete_graph(
+    user_id: str = Query(default="demo_user", min_length=1),
+) -> dict[str, Any]:
+    """Purge all entity nodes and relation edges in the user's knowledge graph."""
+    graph_store: InMemoryGraphStore = GLOBAL_STATE["graph_store"]
+    clean_user = user_id.strip()
+    count = await graph_store.delete_user_graph(clean_user)
+    return {"deleted": count, "user_id": clean_user}
 
 
 # -----------------------------------------------------------------------------
