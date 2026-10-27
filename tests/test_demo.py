@@ -203,3 +203,90 @@ def test_strict_user_isolation_in_demo(client: TestClient) -> None:
     )
     assert resp_b_chat.status_code == 200
     assert "Rusty" not in resp_b_chat.json()["context_used"]
+
+
+def test_graph_endpoints(client: TestClient) -> None:
+    """Verify graph inspection, triplet ingestion, pathfinding, and deletion endpoints."""
+    user_id = f"test_graph_{uuid.uuid4().hex[:8]}"
+
+    # Initially empty for new random user
+    init_res = client.get(f"/api/graph?user_id={user_id}")
+    assert init_res.status_code == 200
+    assert init_res.json()["nodes"] == []
+    assert init_res.json()["edges"] == []
+
+    # Ingest triplet 1: Alice -> Apollo
+    t1 = client.post(
+        "/api/graph/triplets",
+        json={
+            "user_id": user_id,
+            "source": "Alice",
+            "relation": "WORKS_ON",
+            "target": "Apollo",
+            "weight": 0.9,
+        },
+    )
+    assert t1.status_code == 200
+    assert t1.json()["relation"] == "WORKS_ON"
+
+    # Ingest triplet 2: Apollo -> Bob
+    t2 = client.post(
+        "/api/graph/triplets",
+        json={
+            "user_id": user_id,
+            "source": "Apollo",
+            "relation": "MANAGED_BY",
+            "target": "Bob",
+            "weight": 1.0,
+        },
+    )
+    assert t2.status_code == 200
+
+    # Verify graph returns nodes and edges
+    graph_res = client.get(f"/api/graph?user_id={user_id}")
+    assert graph_res.status_code == 200
+    data = graph_res.json()
+    assert len(data["nodes"]) == 3
+    assert len(data["edges"]) == 2
+
+    # Verify pathfinding: Alice -> Bob (2-hop path)
+    paths_res = client.get(
+        f"/api/graph/paths?user_id={user_id}&source=Alice&target=Bob&max_depth=3"
+    )
+    assert paths_res.status_code == 200
+    paths = paths_res.json()
+    assert len(paths) >= 1
+    assert len(paths[0]["path"]) == 2
+    assert [e["relation"] for e in paths[0]["path"]] == ["WORKS_ON", "MANAGED_BY"]
+
+    # Delete user graph
+    del_res = client.delete(f"/api/graph?user_id={user_id}")
+    assert del_res.status_code == 200
+    assert del_res.json()["deleted"] >= 5
+
+    # Confirm purged
+    final_res = client.get(f"/api/graph?user_id={user_id}")
+    assert len(final_res.json()["nodes"]) == 0
+    assert len(final_res.json()["edges"]) == 0
+
+
+def test_graph_tenant_isolation_in_demo(client: TestClient) -> None:
+    """Verify knowledge graph tenant isolation in demo endpoints."""
+    user_a = f"graph_iso_a_{uuid.uuid4().hex[:8]}"
+    user_b = f"graph_iso_b_{uuid.uuid4().hex[:8]}"
+
+    client.post(
+        "/api/graph/triplets",
+        json={
+            "user_id": user_a,
+            "source": "SecretOrg",
+            "relation": "OWNS",
+            "target": "SecretTech",
+        },
+    )
+
+    # User B should see 0 nodes and 0 edges
+    res_b = client.get(f"/api/graph?user_id={user_b}")
+    assert res_b.status_code == 200
+    assert len(res_b.json()["nodes"]) == 0
+    assert len(res_b.json()["edges"]) == 0
