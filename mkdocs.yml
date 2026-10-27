@@ -82,3 +82,4 @@ nav:
       - Spec 015 - Recruiter-Ready Docs: specs/015-recruiter-ready-documentation.md
       - Spec 016 - Portfolio & Interview Guide: specs/016-portfolio-case-study-and-interview-guide.md
       - Spec 017 - Knowledge Graph Layer: specs/017-knowledge-graph-layer.md
+      - Spec 018 - Memory Inspector UI: specs/018-memory-inspector-ui.md
