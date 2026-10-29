@@ -1,0 +1,168 @@
+# Master Experimental Configuration for Real Benchmark Evaluations
+# Version: eval-v1
+# Frozen Date: 2026-10-30
+# Note: Scoring weights and hyperparameters are tuned SOLELY on the 'dev' split.
+# Test split is run strictly once with these frozen configurations.
+
+experiment:
+  name: "memlayer-real-eval-v1"
+  version: "1.0.0"
+  description: "Scientifically rigorous evaluation of Agent Memory Layer against baselines on LoCoMo and LongMemEval."
+  random_seeds:
+    dev: 42
+    test: 1337
+  safety_buffer_ratio: 0.25  # 25% cost buffer for retries and edge cases
+
+models:
+  answer_model:
+    provider: "litellm"
+    model_name: "gemini/gemini-1.5-flash"
+    temperature: 0.0
+    max_tokens: 512
+    pricing_per_1m_tokens:
+      input_usd: 0.075
+      output_usd: 0.30
+
+  judge_model:
+    provider: "litellm"
+    model_name: "gemini/gemini-1.5-pro"
+    temperature: 0.0
+    max_tokens: 256
+    pricing_per_1m_tokens:
+      input_usd: 1.25
+      output_usd: 5.00
+
+  extraction_model:
+    provider: "litellm"
+    model_name: "gemini/gemini-1.5-flash"
+    temperature: 0.0
+    max_tokens: 512
+    pricing_per_1m_tokens:
+      input_usd: 0.075
+      output_usd: 0.30
+
+  embedding_model:
+    provider: "huggingface"
+    model_name: "BAAI/bge-small-en-v1.5"
+    dimension: 384
+    pricing_per_1m_tokens:
+      input_usd: 0.00  # Local inference or $0.02 for hosted text-embedding-3-small
+
+benchmarks:
+  locomo:
+    name: "LoCoMo"
+    description: "Long-context conversational memory benchmark (multi-turn dialogues with shared haystacks)."
+    dataset_path: "eval/datasets/raw/locomo_full.json"
+    categories:
+      - knowledge_update
+      - temporal_reasoning
+      - multi_session
+      - abstention
+    splits:
+      dev:
+        sample_size: 40
+        seed: 42
+      test:
+        sample_size: 160
+        seed: 1337
+    haystack_characteristics:
+      estimated_haystacks: 10
+      mean_tokens_per_haystack: 25000
+      questions_per_haystack: 20
+
+  longmemeval:
+    name: "LongMemEval"
+    description: "Multi-session long-term memory benchmark assessing update, temporal, multi-session and abstention."
+    dataset_path: "eval/datasets/raw/longmemeval_subset.json"
+    categories:
+      - knowledge_update
+      - temporal_reasoning
+      - multi_session
+      - abstention
+    splits:
+      dev:
+        sample_size: 30
+        seed: 42
+      test:
+        sample_size: 120
+        seed: 1337
+    haystack_characteristics:
+      estimated_haystacks: 150
+      mean_tokens_per_haystack: 15000
+      questions_per_haystack: 1
+
+baselines:
+  full_context:
+    enabled: true
+    max_context_tokens: 128000
+    description: "Verbatim concatenation of entire conversational history into prompt context."
+
+  naive_rag:
+    enabled: true
+    top_k: 5
+    chunk_size: 512
+    chunk_overlap: 64
+    description: "Chunked vector similarity retrieval without decay, BM25, or conflict supersession."
+
+  bm25_rerank:
+    enabled: true
+    top_k_retrieval: 15
+    top_k_rerank: 5
+    chunk_size: 512
+    description: "Hybrid sparse BM25 + dense vector retrieval over raw conversation chunks without fact extraction."
+
+  memlayer_full:
+    enabled: true
+    token_budget: 1500
+    retrieval_k: 10
+    scoring_weights:
+      alpha: 0.50     # Similarity weight
+      beta: 0.25      # Recency decay weight
+      gamma: 0.25     # Importance weight
+      tau_days: 30.0  # Half-life decay scale
+    enable_supersession: true
+    enable_decay: true
+    enable_router: true
+    enable_graph: true
+    description: "Full Agent Memory Layer with atomic extraction, supersession, hybrid search, recency, decay, and graph context."
+
+ablations:
+  memlayer_without_supersession:
+    description: "Conflict supersession disabled (contradictory memories kept active)."
+    enable_supersession: false
+
+  memlayer_without_decay:
+    description: "Access frequency and temporal decay disabled."
+    enable_decay: false
+
+  memlayer_without_recency:
+    description: "Temporal recency term omitted from scoring formula (beta = 0.0)."
+    scoring_weights:
+      alpha: 0.67
+      beta: 0.00
+      gamma: 0.33
+      tau_days: 30.0
+
+  memlayer_vector_only:
+    description: "Dense embeddings only (BM25 sparse keyword matching disabled)."
+    vector_only: true
+
+  memlayer_without_router:
+    description: "Turn gating router disabled (always perform retrieval)."
+    enable_router: false
+
+  memlayer_without_graph:
+    description: "Knowledge graph context injection disabled."
+    enable_graph: false
+
+  memlayer_budget_sweep:
+    description: "Ablation over memory injection token budget limits."
+    budgets: [200, 500, 1000, 2000]
+
+cache:
+  enabled: true
+  cache_dir: "eval/cache"
+
+storage:
+  stores_dir: "eval/stores"
+  results_dir: "eval/results"
