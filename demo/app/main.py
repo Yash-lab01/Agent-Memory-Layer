@@ -28,6 +28,8 @@ from memlayer.store.graph_memory import InMemoryGraphStore
 from memlayer.store.sql import SQLStore
 from memlayer.store.vector import QdrantVectorStore
 
+from demo.wanderai import SEED_TRAVEL_TRIPLETS, TravelerProfile, WANDERAI_SCENARIOS, WanderAIAgent
+
 logger = logging.getLogger(__name__)
 
 # -----------------------------------------------------------------------------
@@ -58,54 +60,197 @@ class DemoFactExtractor(FactExtractor):
             if role.lower() == "user" and content.strip():
                 clean_text = content.strip()
                 lower = clean_text.lower()
-                entity = "General"
+                matched = False
 
+                # Travel Domain Facts
+                if "vegan" in lower:
+                    facts.append(
+                        ExtractedFact(
+                            content="Traveler maintains a strict vegan diet.",
+                            entity="Dietary",
+                            importance=0.95,
+                            confidence=0.98,
+                        )
+                    )
+                    matched = True
+                if "star alliance" in lower:
+                    facts.append(
+                        ExtractedFact(
+                            content="Traveler holds Star Alliance Gold loyalty status.",
+                            entity="Loyalty",
+                            importance=0.85,
+                            confidence=0.95,
+                        )
+                    )
+                    matched = True
+                if "oneworld" in lower:
+                    facts.append(
+                        ExtractedFact(
+                            content="Traveler holds OneWorld Sapphire loyalty status.",
+                            entity="Loyalty",
+                            importance=0.90,
+                            confidence=0.98,
+                        )
+                    )
+                    matched = True
+                if "150" in lower or ("budget" in lower and ("hotel" in lower or "night" in lower)):
+                    facts.append(
+                        ExtractedFact(
+                            content="Traveler accommodation budget is strictly under $150 per night.",
+                            entity="Budget",
+                            importance=0.88,
+                            confidence=0.95,
+                        )
+                    )
+                    matched = True
+                if "contemporary art" in lower:
+                    facts.append(
+                        ExtractedFact(
+                            content="Traveler loves contemporary art museums.",
+                            entity="Interests",
+                            importance=0.80,
+                            confidence=0.90,
+                        )
+                    )
+                    matched = True
+                if "tokyo" in lower and ("spring" in lower or "trip" in lower or "planning" in lower):
+                    facts.append(
+                        ExtractedFact(
+                            content="Traveler is planning a 7-day trip to Tokyo in spring.",
+                            entity="Destination",
+                            importance=0.75,
+                            confidence=0.90,
+                        )
+                    )
+                    matched = True
+                if "paris" in lower and ("autumn" in lower or "trip" in lower or "plan" in lower or "eat" in lower):
+                    facts.append(
+                        ExtractedFact(
+                            content="Traveler is planning a 4-day autumn trip to Paris.",
+                            entity="Destination",
+                            importance=0.75,
+                            confidence=0.90,
+                        )
+                    )
+                    matched = True
+
+                # General & Developer Facts
                 if (
                     "relocated to austin" in lower
                     or "moved to austin" in lower
                     or ("austin" in lower and "seattle" in lower)
                 ):
-                    clean_text = "User relocated to Austin, Texas."
-                    entity = "Location"
-                elif "seattle" in lower:
-                    clean_text = "User lives in Seattle and works as a cloud engineer."
-                    entity = "Location"
-                elif "austin" in lower:
-                    clean_text = "User relocated to Austin, Texas."
-                    entity = "Location"
-                elif "rust" in lower and ("migrated" in lower or "primary" in lower):
-                    clean_text = "User primary backend programming language is Rust."
-                    entity = "Programming"
-                elif "go" in lower or "golang" in lower:
-                    clean_text = "User primary backend programming language is Go."
-                    entity = "Programming"
-                elif "rust" in lower:
-                    clean_text = "User primary backend programming language is Rust."
-                    entity = "Programming"
-                elif "latte" in lower or "oat milk" in lower:
-                    clean_text = "User enjoys iced oat milk latte on the porch."
-                    entity = "Preferences"
-                elif "dark mode" in lower:
-                    clean_text = "User prefers dark mode UI for code editors."
-                    entity = "Preferences"
-                elif "civic" in lower or "car" in lower:
-                    clean_text = "User owns a 2024 Honda Civic sedan in pearl white."
-                    entity = "Vehicle"
-                elif "crossclimate" in lower or "tires" in lower:
-                    clean_text = "User installed Michelin CrossClimate2 tires on vehicle."
-                    entity = "Vehicle"
-                elif "dog" in lower or "rusty" in lower or "pet" in lower:
-                    clean_text = "User adopted a golden retriever named Rusty."
-                    entity = "Pets"
-
-                facts.append(
-                    ExtractedFact(
-                        content=clean_text,
-                        entity=entity,
-                        importance=0.85,
-                        confidence=0.95,
+                    facts.append(
+                        ExtractedFact(
+                            content="User relocated to Austin, Texas.",
+                            entity="Location",
+                            importance=0.85,
+                            confidence=0.95,
+                        )
                     )
-                )
+                    matched = True
+                elif "seattle" in lower and "tokyo" not in lower:
+                    facts.append(
+                        ExtractedFact(
+                            content="User lives in Seattle and works as a cloud engineer.",
+                            entity="Location",
+                            importance=0.85,
+                            confidence=0.95,
+                        )
+                    )
+                    matched = True
+                elif "austin" in lower and "paris" not in lower:
+                    facts.append(
+                        ExtractedFact(
+                            content="User relocated to Austin, Texas.",
+                            entity="Location",
+                            importance=0.85,
+                            confidence=0.95,
+                        )
+                    )
+                    matched = True
+
+                if "rust" in lower and ("migrated" in lower or "primary" in lower or "backend" in lower):
+                    facts.append(
+                        ExtractedFact(
+                            content="User primary backend programming language is Rust.",
+                            entity="Programming",
+                            importance=0.85,
+                            confidence=0.95,
+                        )
+                    )
+                    matched = True
+                elif re.search(r"\b(go|golang)\b", lower) and ("backend" in lower or "programming" in lower or "language" in lower):
+                    facts.append(
+                        ExtractedFact(
+                            content="User primary backend programming language is Go.",
+                            entity="Programming",
+                            importance=0.85,
+                            confidence=0.95,
+                        )
+                    )
+                    matched = True
+
+                if "latte" in lower or "oat milk" in lower:
+                    facts.append(
+                        ExtractedFact(
+                            content="User enjoys iced oat milk latte on the porch.",
+                            entity="Preferences",
+                            importance=0.85,
+                            confidence=0.95,
+                        )
+                    )
+                    matched = True
+                if "dark mode" in lower:
+                    facts.append(
+                        ExtractedFact(
+                            content="User prefers dark mode UI for code editors.",
+                            entity="Preferences",
+                            importance=0.85,
+                            confidence=0.95,
+                        )
+                    )
+                    matched = True
+                if "civic" in lower or "car" in lower:
+                    facts.append(
+                        ExtractedFact(
+                            content="User owns a 2024 Honda Civic sedan in pearl white.",
+                            entity="Vehicle",
+                            importance=0.85,
+                            confidence=0.95,
+                        )
+                    )
+                    matched = True
+                if "crossclimate" in lower or "tires" in lower:
+                    facts.append(
+                        ExtractedFact(
+                            content="User installed Michelin CrossClimate2 tires on vehicle.",
+                            entity="Vehicle",
+                            importance=0.85,
+                            confidence=0.95,
+                        )
+                    )
+                    matched = True
+                if "dog" in lower or "rusty" in lower or "pet" in lower:
+                    facts.append(
+                        ExtractedFact(
+                            content="User adopted a golden retriever named Rusty.",
+                            entity="Pets",
+                            importance=0.85,
+                            confidence=0.95,
+                        )
+                    )
+                    matched = True
+
+                if not matched and not any(k in lower for k in ["where", "what", "how", "who", "help", "recommend"]):
+                    facts.append(
+                        ExtractedFact(
+                            content=clean_text,
+                            entity="General",
+                            importance=0.5,
+                            confidence=0.8,
+                        )
+                    )
 
         return ExtractionResult(facts=facts)
 
@@ -220,6 +365,16 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
                     "reason": "Backend language updated to Rust, superseding Go.",
                 }
             )
+        elif "oneworld" in user_msg.lower() and "star alliance" in user_msg.lower():
+            match = re.search(r"ID:\s*([a-f0-9\-]+)", user_msg)
+            old_id = match.group(1) if match else "old-mem"
+            conflicts.append(
+                {
+                    "old_memory_id": old_id,
+                    "is_contradiction": True,
+                    "reason": "Airline loyalty updated to OneWorld Sapphire, superseding Star Alliance Gold.",
+                }
+            )
 
         text = json.dumps({"conflicts": conflicts})
 
@@ -241,11 +396,16 @@ async def lifespan(_app: FastAPI) -> AsyncIterator[None]:
         completion_fn=_conflict_completion,
     )
 
+    wanderai_agent = WanderAIAgent(memlayer=memlayer, conflict_detector=conflict_detector)
+    await wanderai_agent.seed_travel_knowledge("demo_user")
+    await wanderai_agent.seed_travel_knowledge("wanderer_sarah")
+
     GLOBAL_STATE["store"] = store
     GLOBAL_STATE["vector_store"] = vector_store
     GLOBAL_STATE["graph_store"] = graph_store
     GLOBAL_STATE["memlayer"] = memlayer
     GLOBAL_STATE["conflict_detector"] = conflict_detector
+    GLOBAL_STATE["wanderai_agent"] = wanderai_agent
 
     logger.info("Agent Memory Layer Demo initialized successfully.")
     yield
@@ -652,6 +812,70 @@ async def delete_graph(
     clean_user = user_id.strip()
     count = await graph_store.delete_user_graph(clean_user)
     return {"deleted": count, "user_id": clean_user}
+
+
+# -----------------------------------------------------------------------------
+# WanderAI Travel Companion Endpoints
+# -----------------------------------------------------------------------------
+
+
+@app.get("/api/wanderai/scenarios")
+async def get_wanderai_scenarios() -> list[dict[str, Any]]:
+    """Return the predefined showcase dialogue turns for WanderAI."""
+    return WANDERAI_SCENARIOS
+
+
+@app.post("/api/wanderai/chat", response_model=ChatResponse)
+async def wanderai_chat(req: ChatRequest) -> ChatResponse:
+    """Execute a conversational travel turn with WanderAI."""
+    agent: WanderAIAgent = GLOBAL_STATE["wanderai_agent"]
+    result = await agent.chat(
+        user_id=req.user_id,
+        message=req.message,
+        session_id=req.session_id,
+        memory_enabled=req.memory_enabled,
+    )
+    return ChatResponse(
+        reply=result.reply,
+        memory_enabled=result.memory_enabled,
+        retrieved_memories=[
+            RetrievedMemoryItem(
+                id=m["id"],
+                content=m["content"],
+                entity=m.get("entity"),
+                score=m["score"],
+                status=m["status"],
+                created_at=m["created_at"],
+            )
+            for m in result.retrieved_memories
+        ],
+        context_used=result.context_used,
+        graph_context=result.graph_context,
+        prompt_tokens=result.prompt_tokens,
+        completion_tokens=result.completion_tokens,
+        latency_ms=result.latency_ms,
+    )
+
+
+@app.get("/api/wanderai/profile", response_model=TravelerProfile)
+async def get_traveler_profile(
+    user_id: str = Query(default="wanderer_sarah", min_length=1),
+) -> TravelerProfile:
+    """Retrieve synthesized traveler profile including active facts and superseded history."""
+    agent: WanderAIAgent = GLOBAL_STATE["wanderai_agent"]
+    clean_user = user_id.strip()
+    return await agent.get_traveler_profile(user_id=clean_user)
+
+
+@app.post("/api/wanderai/seed")
+async def seed_wanderai_knowledge(
+    user_id: str = Query(default="wanderer_sarah", min_length=1),
+) -> dict[str, Any]:
+    """Seed destination knowledge graph triplets for a traveler."""
+    agent: WanderAIAgent = GLOBAL_STATE["wanderai_agent"]
+    clean_user = user_id.strip()
+    count = await agent.seed_travel_knowledge(user_id=clean_user)
+    return {"status": "seeded", "relations_added": count, "user_id": clean_user}
 
 
 # -----------------------------------------------------------------------------

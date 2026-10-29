@@ -1239,6 +1239,110 @@ input:checked + .slider:before {
   line-height: 1.4;
 }
 
+/* ==========================================================================
+   WanderAI Travel Companion Styling
+   ========================================================================== */
+
+.scenarios-divider {
+  color: var(--border-subtle);
+  padding: 0 4px;
+}
+
+.btn-pill-wanderai {
+  background: rgba(6, 182, 212, 0.1);
+  border-color: rgba(6, 182, 212, 0.3);
+  color: #38bdf8;
+}
+
+.btn-pill-wanderai:hover {
+  background: #0284c7;
+  color: #fff;
+  border-color: #38bdf8;
+}
+
+.wanderai-profile-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wanderai-header-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  border-radius: var(--radius-md);
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.wanderai-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wanderai-avatar {
+  font-size: 24px;
+  background: rgba(6, 182, 212, 0.15);
+  border: 1px solid rgba(6, 182, 212, 0.4);
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.wanderai-profile-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f8fafc;
+}
+
+.wanderai-profile-subtitle {
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.wanderai-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.wanderai-summary-box {
+  background: rgba(20, 29, 47, 0.6);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 8px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.summary-box-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.summary-box-val {
+  font-size: 12px;
+  font-weight: 600;
+  color: #f1f5f9;
+}
+
+.wanderai-section-title {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
 /* Responsive adjustments */
 @media (max-width: 1024px) {
   .main-container {

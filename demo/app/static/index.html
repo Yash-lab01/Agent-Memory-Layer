@@ -112,6 +112,20 @@
         <button class="btn-pill" id="btn-scenario-graph" data-text="Who manages Project Apollo and where is Carol located?" data-session="session_3">
           6. Multi-Hop Graph Query
         </button>
+        <span class="scenarios-divider">|</span>
+        <span class="scenarios-title" style="color: #38bdf8;">WanderAI:</span>
+        <button class="btn-pill btn-pill-wanderai" id="btn-scenario-wanderai-1" data-user="wanderer_sarah" data-session="trip_tokyo_spring" data-text="I'm planning a 7-day trip to Tokyo next spring. I am strictly vegan, hold Star Alliance Gold status, and love contemporary art museums.">
+          ✈️ 1. Tokyo Setup
+        </button>
+        <button class="btn-pill btn-pill-wanderai" id="btn-scenario-wanderai-2" data-user="wanderer_sarah" data-session="trip_tokyo_spring" data-text="Actually, I switched my primary airline loyalty program to OneWorld Sapphire, and my accommodation budget is strictly under $150 per night.">
+          ✈️ 2. Update Loyalty & Budget
+        </button>
+        <button class="btn-pill btn-pill-wanderai" id="btn-scenario-wanderai-3" data-user="wanderer_sarah" data-session="trip_paris_autumn" data-text="Help me plan a 4-day autumn trip to Paris. Recommend a neighborhood to stay in and where I should grab dinner.">
+          ✈️ 3. Paris (Cross-Trip Recall)
+        </button>
+        <button class="btn-pill btn-pill-wanderai" id="btn-scenario-wanderai-4" data-user="wanderer_sarah" data-session="trip_paris_autumn" data-text="What contemporary art museum is located near my hotel in Le Marais, and where can I get breakfast nearby?">
+          ✈️ 4. Graph Itinerary
+        </button>
       </div>
 
       <!-- Messages Stream -->
@@ -119,13 +133,13 @@
         <div class="system-welcome-card">
           <div class="welcome-header">
             <span class="welcome-icon">💡</span>
-            <h3>Welcome to Agent Memory Layer</h3>
+            <h3>Welcome to Agent Memory Layer & WanderAI</h3>
           </div>
           <p>
             This demo demonstrates durable memory across sessions. When <strong>Memory ON</strong> is active, atomic facts are asynchronously extracted, ranked using recency & importance scoring, and older conflicting facts are non-destructively marked <code>superseded</code>.
           </p>
           <p>
-            The <strong>Knowledge Graph</strong> tab visualizes entity relationships and enables multi-hop relational pathfinding across conversational sessions!
+            Try the <strong>WanderAI Travel Mode</strong> presets above to test multi-session cross-trip memory persistence, preference updates (loyalty & budget), and destination knowledge graph reasoning!
           </p>
         </div>
       </div>
@@ -136,7 +150,7 @@
           id="chat-input"
           class="chat-textarea"
           rows="2"
-          placeholder="Type a message (e.g. 'Who reports to Carol?' or 'Where do I live?')..."
+          placeholder="Type a message (e.g. 'Help me plan 4 days in Paris' or 'Where do I live?')..."
         ></textarea>
         <button id="btn-send" class="btn-primary">
           <span class="btn-text">Send</span>
@@ -158,7 +172,7 @@
         </div>
       </div>
 
-      <!-- Tabs: Active vs Superseded vs Knowledge Graph -->
+      <!-- Tabs: Active vs Superseded vs Knowledge Graph vs WanderAI -->
       <div class="inspector-tabs">
         <button class="tab-btn active" id="tab-active" data-tab="active">
           Active Facts (<span id="tab-active-count">0</span>)
@@ -168,6 +182,9 @@
         </button>
         <button class="tab-btn" id="tab-graph" data-tab="graph">
           Knowledge Graph (<span id="tab-graph-count">0</span>)
+        </button>
+        <button class="tab-btn" id="tab-wanderai" data-tab="wanderai">
+          WanderAI Profile (<span id="tab-wanderai-count">0</span>)
         </button>
       </div>
 
@@ -246,6 +263,66 @@
             </div>
             <!-- Canvas Hint -->
             <div class="canvas-hint">Drag nodes to reposition &bull; Click to inspect relations</div>
+          </div>
+        </div>
+
+        <!-- WanderAI Traveler Profile View -->
+        <div class="tab-pane" id="pane-wanderai">
+          <div class="wanderai-profile-container">
+            <div class="wanderai-header-card">
+              <div class="wanderai-header-left">
+                <span class="wanderai-avatar">🌍</span>
+                <div>
+                  <h3 class="wanderai-profile-title" id="wanderai-profile-user">wanderer_sarah</h3>
+                  <span class="wanderai-profile-subtitle">Durable Multi-Trip Traveler Profile</span>
+                </div>
+              </div>
+              <button id="btn-wanderai-seed" class="btn-primary-sm" title="Seed Paris & Tokyo knowledge into graph">
+                + Seed Destination Graph
+              </button>
+            </div>
+
+            <!-- Profile Summary Badges -->
+            <div class="wanderai-summary-grid">
+              <div class="wanderai-summary-box">
+                <span class="summary-box-label">Dietary Needs</span>
+                <span class="summary-box-val" id="profile-dietary">Strictly Vegan</span>
+              </div>
+              <div class="wanderai-summary-box">
+                <span class="summary-box-label">Airline Loyalty</span>
+                <span class="summary-box-val accent-emerald" id="profile-loyalty">OneWorld Sapphire</span>
+              </div>
+              <div class="wanderai-summary-box">
+                <span class="summary-box-label">Budget Tier</span>
+                <span class="summary-box-val" id="profile-budget">&lt; $150 / night</span>
+              </div>
+              <div class="wanderai-summary-box">
+                <span class="summary-box-label">Interests</span>
+                <span class="summary-box-val" id="profile-interests">Contemporary Art</span>
+              </div>
+            </div>
+
+            <!-- Active Traveler Facts List -->
+            <div class="wanderai-section-title">Active Traveler Facts</div>
+            <div id="wanderai-active-list" class="memory-card-list">
+              <div class="empty-state">
+                <span class="empty-icon">🎒</span>
+                <p>No traveler preferences active.</p>
+                <span class="empty-hint">Click a WanderAI preset scenario above to initialize!</span>
+              </div>
+            </div>
+
+            <!-- Superseded Travel History -->
+            <div class="wanderai-section-title" style="margin-top: 14px; color: var(--accent-rose);">
+              Superseded Travel History (Provenance)
+            </div>
+            <div id="wanderai-superseded-list" class="memory-card-list">
+              <div class="empty-state">
+                <span class="empty-icon">🛡️</span>
+                <p>No superseded travel preferences yet.</p>
+                <span class="empty-hint">Update loyalty or budget to observe non-destructive supersession!</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>

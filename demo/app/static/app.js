@@ -33,14 +33,27 @@ document.addEventListener("DOMContentLoaded", () => {
   const tabActive = document.getElementById("tab-active");
   const tabSuperseded = document.getElementById("tab-superseded");
   const tabGraph = document.getElementById("tab-graph");
+  const tabWanderai = document.getElementById("tab-wanderai");
   const tabActiveCount = document.getElementById("tab-active-count");
   const tabSupersededCount = document.getElementById("tab-superseded-count");
   const tabGraphCount = document.getElementById("tab-graph-count");
+  const tabWanderaiCount = document.getElementById("tab-wanderai-count");
   const paneActive = document.getElementById("pane-active");
   const paneSuperseded = document.getElementById("pane-superseded");
   const paneGraph = document.getElementById("pane-graph");
+  const paneWanderai = document.getElementById("pane-wanderai");
   const activeMemoriesList = document.getElementById("active-memories-list");
   const supersededMemoriesList = document.getElementById("superseded-memories-list");
+
+  // WanderAI Elements
+  const wanderaiProfileUser = document.getElementById("wanderai-profile-user");
+  const btnWanderaiSeed = document.getElementById("btn-wanderai-seed");
+  const profileDietary = document.getElementById("profile-dietary");
+  const profileLoyalty = document.getElementById("profile-loyalty");
+  const profileBudget = document.getElementById("profile-budget");
+  const profileInterests = document.getElementById("profile-interests");
+  const wanderaiActiveList = document.getElementById("wanderai-active-list");
+  const wanderaiSupersededList = document.getElementById("wanderai-superseded-list");
 
   // Knowledge Graph Elements
   const graphCanvas = document.getElementById("graph-canvas");
@@ -117,8 +130,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // ---------------------------------------------------------------------------
 
   function switchTab(activeTabName) {
-    [tabActive, tabSuperseded, tabGraph].forEach((t) => t.classList.remove("active"));
-    [paneActive, paneSuperseded, paneGraph].forEach((p) => p.classList.remove("active"));
+    [tabActive, tabSuperseded, tabGraph, tabWanderai].forEach((t) => t && t.classList.remove("active"));
+    [paneActive, paneSuperseded, paneGraph, paneWanderai].forEach((p) => p && p.classList.remove("active"));
 
     if (activeTabName === "active") {
       tabActive.classList.add("active");
@@ -135,12 +148,17 @@ document.addEventListener("DOMContentLoaded", () => {
           graphVisualizer.wake();
         }, 30);
       }
+    } else if (activeTabName === "wanderai") {
+      tabWanderai.classList.add("active");
+      paneWanderai.classList.add("active");
+      fetchWanderAIProfile();
     }
   }
 
   tabActive.addEventListener("click", () => switchTab("active"));
   tabSuperseded.addEventListener("click", () => switchTab("superseded"));
   tabGraph.addEventListener("click", () => switchTab("graph"));
+  tabWanderai.addEventListener("click", () => switchTab("wanderai"));
 
   // ---------------------------------------------------------------------------
   // Quick Scenario Buttons
@@ -150,11 +168,20 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.addEventListener("click", () => {
       const text = btn.getAttribute("data-text");
       const session = btn.getAttribute("data-session");
+      const user = btn.getAttribute("data-user");
+      if (user) {
+        inputUserId.value = user;
+        badgeInspectorUser.textContent = user;
+      }
       if (session) {
         selectSession.value = session;
       }
       chatInput.value = text;
       chatInput.focus();
+
+      if (btn.classList.contains("btn-pill-wanderai")) {
+        switchTab("wanderai");
+      }
     });
   });
 
@@ -1065,6 +1092,121 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // ---------------------------------------------------------------------------
+  // WanderAI Traveler Profile Integration
+  // ---------------------------------------------------------------------------
+
+  async function fetchWanderAIProfile() {
+    try {
+      const res = await fetch(`/api/wanderai/profile?user_id=${encodeURIComponent(getUserId())}`);
+      if (!res.ok) return;
+
+      const prof = await res.json();
+      if (wanderaiProfileUser) wanderaiProfileUser.textContent = prof.user_id;
+      if (tabWanderaiCount) tabWanderaiCount.textContent = prof.active_preferences.length;
+
+      if (profileDietary) {
+        profileDietary.textContent = prof.dietary.length
+          ? prof.dietary[0].replace("Traveler maintains a strict ", "").replace(" diet.", "")
+          : "None stated";
+      }
+      if (profileLoyalty) {
+        profileLoyalty.textContent = prof.airline_loyalty.length
+          ? prof.airline_loyalty[0].replace("Traveler holds ", "").replace(" loyalty status.", "")
+          : "None active";
+      }
+      if (profileBudget) {
+        profileBudget.textContent = prof.budget_tier.length
+          ? prof.budget_tier[0].replace("Traveler accommodation budget is ", "").replace(".", "")
+          : "Flexible";
+      }
+      if (profileInterests) {
+        profileInterests.textContent = prof.interests.length
+          ? prof.interests[0].replace("Traveler loves ", "").replace(".", "")
+          : "General";
+      }
+
+      renderWanderAILists(prof.active_preferences, prof.superseded_preferences);
+    } catch (e) {
+      console.error("Failed to fetch WanderAI profile:", e);
+    }
+  }
+
+  function renderWanderAILists(active, superseded) {
+    if (!wanderaiActiveList || !wanderaiSupersededList) return;
+
+    if (!active.length) {
+      wanderaiActiveList.innerHTML = `
+        <div class="empty-state">
+          <span class="empty-icon">🎒</span>
+          <p>No traveler preferences active.</p>
+          <span class="empty-hint">Click a WanderAI preset scenario above to initialize!</span>
+        </div>
+      `;
+    } else {
+      wanderaiActiveList.innerHTML = active
+        .map(
+          (m) => `
+          <div class="memory-card card-active">
+            <div class="card-top-row">
+              <span class="entity-pill entity-${(m.entity || "general").toLowerCase()}">${escapeHtml(m.entity || "Preference")}</span>
+              <span class="status-badge badge-active">Active</span>
+            </div>
+            <div class="memory-fact-text">${escapeHtml(m.content)}</div>
+            <div class="card-footer-row">
+              <span class="card-metrics">Imp: ${(m.importance * 100).toFixed(0)}%</span>
+              <button class="btn-card-forget" onclick="window.forgetMemory('${m.id}')">✕ Forget</button>
+            </div>
+          </div>
+        `
+        )
+        .join("");
+    }
+
+    if (!superseded.length) {
+      wanderaiSupersededList.innerHTML = `
+        <div class="empty-state">
+          <span class="empty-icon">🛡️</span>
+          <p>No superseded travel preferences yet.</p>
+          <span class="empty-hint">Update loyalty or budget to observe non-destructive supersession!</span>
+        </div>
+      `;
+    } else {
+      wanderaiSupersededList.innerHTML = superseded
+        .map(
+          (m) => `
+          <div class="memory-card card-superseded">
+            <div class="card-top-row">
+              <span class="entity-pill entity-${(m.entity || "general").toLowerCase()}">${escapeHtml(m.entity || "Preference")}</span>
+              <span class="status-badge badge-superseded">Superseded</span>
+            </div>
+            <div class="memory-fact-text">${escapeHtml(m.content)}</div>
+            <div class="supersession-provenance">
+              <span>🔗 Superseded by #${escapeHtml((m.superseded_by || "").slice(0, 8))}</span>
+            </div>
+          </div>
+        `
+        )
+        .join("");
+    }
+  }
+
+  if (btnWanderaiSeed) {
+    btnWanderaiSeed.addEventListener("click", async () => {
+      try {
+        const res = await fetch(`/api/wanderai/seed?user_id=${encodeURIComponent(getUserId())}`, {
+          method: "POST",
+        });
+        if (res.ok) {
+          fetchWanderAIProfile();
+          fetchGraph();
+        }
+      } catch (err) {
+        alert("Error seeding destination graph: " + err.message);
+      }
+    });
+  }
+
   function escapeHtml(str) {
     if (!str) return "";
     return str
@@ -1078,4 +1220,5 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initial load
   fetchMemories();
   fetchGraph();
+  fetchWanderAIProfile();
 });
