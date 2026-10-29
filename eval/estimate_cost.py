@@ -192,7 +192,7 @@ def estimate_benchmark_cost(
 def print_cost_report(breakdowns: list[CostBreakdown], buffer_pct: int) -> None:
     """Print structured cost summary table to console."""
     if hasattr(sys.stdout, "reconfigure"):
-        getattr(sys.stdout, "reconfigure")(encoding="utf-8", errors="replace")
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     print("=" * 86)
     print("      AGENT MEMORY LAYER (`memlayer`) - BENCHMARK EVALUATION COST ESTIMATION")
     print("=" * 86)
