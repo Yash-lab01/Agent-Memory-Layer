@@ -158,5 +158,11 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
   - [x] Triplet creation modal and tenant-scoped graph reset
   - [x] FastAPI graph endpoints (`/api/graph`, `/api/graph/triplets`, `/api/graph/paths`, `DELETE /api/graph`)
   - [x] End-to-end integration tests in `tests/test_demo.py`
-- [ ] **Phase 8.3:** WanderAI Integration Demo
+- [x] **Phase 8.3: WanderAI Travel Companion Integration Demo (Spec 019)**
+  - [x] `WanderAIAgent` encapsulating `MemoryLayer` with travel persona and itinerary synthesis
+  - [x] 4-turn showcase scenarios (`demo/wanderai/scenarios.py`) demonstrating cross-trip recall, loyalty/budget updates, and graph traversal
+  - [x] Executable CLI demo runner (`demo/wanderai/run_demo.py`)
+  - [x] WanderAI REST endpoints in `demo/app/main.py` (`/api/wanderai/chat`, `/api/wanderai/profile`, `/api/wanderai/scenarios`, `/api/wanderai/seed`)
+  - [x] Dedicated WanderAI profile tab and scenario triggers in web UI
+  - [x] Comprehensive unit and integration tests in `tests/test_wanderai.py`
 
