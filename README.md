@@ -6,9 +6,9 @@
 [![Type checked: mypy](https://img.shields.io/badge/type%20check-mypy-blue.svg)](http://mypy-lang.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-> **Durable long-term memory for conversational agents, benchmarked on LongMemEval & LoCoMo.**
+> **Durable long-term memory and knowledge graph reasoning for conversational agents, benchmarked on LongMemEval & LoCoMo.**
 
-`memlayer` is a modular, transparent Python library and service that equips conversational LLM agents with durable memory across multi-session dialogues. It extracts atomic facts from raw conversation turns, tracks temporal provenance, resolves contradictions non-destructively through supersession, and retrieves relevant memories using hybrid scoring.
+`memlayer` is a modular, transparent Python library and service that equips conversational LLM agents with durable memory across multi-session dialogues. It extracts atomic facts from raw conversation turns, tracks temporal provenance, resolves contradictions non-destructively through supersession, traverses entity knowledge graphs, and retrieves relevant memories using hybrid scoring.
 
 Rather than claiming algorithmic novelty over existing systems (Mem0, Letta, Zep), `memlayer` emphasizes **architectural rigor, measurable evaluation, and reproducible ablations**. Every design choice is backed by empirical numbers.
 
@@ -23,22 +23,24 @@ flowchart TD
     end
 
     subgraph MemoryLayer ["memlayer Core"]
-        API["MemoryLayer API\n(add, search, forget)"]
+        API["MemoryLayer API\n(add, search, forget, graph)"]
         Router{"Turn Gating\nRouter"}
         Extractor["Async Fact Extractor\n(Pydantic Schema Validation)"]
         ConflictEngine["Conflict & Supersession Engine\n(Non-destructive Linking)"]
         Scorer["Multi-Factor Scoring Engine\ns = α·hybrid + β·e^(-Δt/τ) + γ·importance"]
-        Budgeter["Token-Budgeted Context Formatter"]
+        Budgeter["Token-Budgeted Context Formatter\n(Facts + Graph Subgraphs)"]
     end
 
     subgraph Storage ["Durable Storage Backends"]
         SQLStore[("Relational Store (SQLite / Postgres)\nEpisodes & Memory Metadata")]
         VectorStore[("Vector Store (Qdrant / pgvector)\nFact Embeddings")]
+        GraphStore[("Knowledge Graph Store\n(InMemory / NetworkX)\nMulti-Hop Entity Triples")]
     end
 
     subgraph Observability ["Observability & Integrations"]
         Langfuse["Langfuse / OTel Tracing"]
         MCPServer["Model Context Protocol (MCP)"]
+        WebUI["Interactive Demo & Visualizer\n(FastAPI + Canvas KG)"]
     end
 
     Agent -->|"1. User Query"| API
@@ -48,6 +50,8 @@ flowchart TD
 
     Scorer -->|"Hybrid Search (BM25 + Dense)"| Storage
     Storage --> Scorer
+    API -->|"Multi-Hop Entity Traversal"| GraphStore
+    GraphStore --> Budgeter
     Scorer -->|"Top-k Scored"| Budgeter
     Budgeter -->|"3. Budgeted Context"| Agent
 
@@ -56,6 +60,7 @@ flowchart TD
     ConflictEngine -->|"Persist Active / Superseded"| Storage
     API -.->|"Telemetry Spans"| Langfuse
     MCPServer -->|"Standard Stdio Tools"| API
+    WebUI -->|"REST Endpoints"| API
 ```
 
 ---
@@ -102,9 +107,9 @@ To isolate what actually delivers performance, 4 controlled ablations were execu
 
 ---
 
-## Interactive Demo: Memory ON vs Memory OFF
+## Interactive Demos & Showcases
 
-### Scenario: The User Moves Cities (State Transition)
+### 1. Memory ON vs Memory OFF: City Move (State Transition)
 
 #### Session 1:
 > **User:** *"I'm currently based in Pune working as a backend engineer."*  
@@ -125,6 +130,42 @@ To isolate what actually delivers performance, 4 controlled ablations were execu
 
 ---
 
+### 2. WanderAI Travel Companion: Cross-Trip Memory & Graph Traversal
+
+A complete, production-grade integration demo showcasing durable cross-trip persistence, preference contradiction updates, and multi-hop destination reasoning via the Knowledge Graph:
+
+- **Turn 1 (Tokyo Setup):** Captures strict vegan dietary needs, Star Alliance Gold status, and contemporary art interests.
+- **Turn 2 (Preference Contradiction):** Traveler switches loyalty to *OneWorld Sapphire* and sets a `<$150/night` budget ceiling. Star Alliance Gold is archived non-destructively as `superseded` (`superseded_by: #mem-id`).
+- **Turn 3 (Paris Trip - Cross-Trip Recall):** Recommends plant-based dining in Le Marais and budget boutique hotels (~$130/night) without re-prompting the user.
+- **Turn 4 (Itinerary Synthesis):** Traverses the destination Knowledge Graph to identify Le Marais attractions (*Centre Pompidou*) and adjacent vegan eateries (*Wild & The Moon*).
+
+Run the standalone CLI showcase:
+```bash
+uv run python demo/wanderai/run_demo.py
+```
+
+---
+
+### 3. Memory Inspector & Interactive Knowledge Graph Visualizer
+
+The web application includes a full **Memory Inspector** and real-time **HTML5 Canvas Force-Directed Knowledge Graph Visualizer**:
+
+- **Active Memories Tab:** Inspect active extracted facts, importance weights, confidence scores, and access frequencies.
+- **Superseded History Tab:** Audit non-destructive supersession chains with direct links to the superseding memory ID.
+- **Knowledge Graph Visualizer Tab:** 
+  - Dynamic force-directed layout with physics simulation, node dragging, and zoom/pan.
+  - Degree-based node radius sizing and directed arrow edges.
+  - Multi-hop BFS pathfinding tool highlighting shortest paths and relation breadcrumbs between entities.
+- **WanderAI Traveler Profile Tab:** Live profile cards for dietary restrictions, loyalty programs, budget ceilings, planned trips, and graph topology.
+
+Launch the web demo:
+```bash
+uv run uvicorn demo.app.main:app --reload --port 8000
+# Open http://localhost:8000
+```
+
+---
+
 ## Quickstart (5 Commands)
 
 ```bash
@@ -135,14 +176,14 @@ cd Agent-Memory-Layer
 # 2. Create virtual environment with uv
 uv venv && source .venv/bin/activate  # Windows: .venv\Scripts\activate
 
-# 3. Install in editable mode with development & demo extras
-uv pip install -e ".[dev,demo,mcp,tracing]"
+# 3. Install in editable mode with all extras (dev, demo, mcp, tracing, graph)
+uv pip install -e ".[dev,demo,mcp,tracing,graph]"
 
-# 4. Configure environment template
-cp .env.example .env
+# 4. Run test suite (233 passing tests)
+uv run pytest
 
-# 5. Run test suite
-pytest
+# 5. Launch the interactive web demo
+uv run uvicorn demo.app.main:app --reload --port 8000
 ```
 
 ---
@@ -152,11 +193,13 @@ pytest
 ```python
 import asyncio
 from memlayer import MemoryLayer
+from memlayer.store.graph_memory import InMemoryGraphStore
 
 
 async def main():
-    # 1. Initialize MemoryLayer (local SQLite + in-memory Qdrant default)
-    mem = await MemoryLayer.create_local(vector_dim=64)
+    # 1. Initialize MemoryLayer with relational, vector, and graph stores
+    graph_store = InMemoryGraphStore()
+    mem = await MemoryLayer.create_local(vector_dim=64, graph_store=graph_store)
 
     # 2. Ingest dialogue turn asynchronously
     messages = [
@@ -165,10 +208,24 @@ async def main():
     ]
     await mem.add(user_id="alice", messages=messages)
 
-    # 3. Retrieve relevant context within a token budget
+    # 3. Add domain relations to the user's Knowledge Graph
+    await mem.add_triplet(
+        user_id="alice",
+        source="Tokyo",
+        relation="HAS_DISTRICT",
+        target="Roppongi",
+    )
+    await mem.add_triplet(
+        user_id="alice",
+        source="Roppongi",
+        relation="HAS_ATTRACTION",
+        target="Mori Art Museum",
+    )
+
+    # 4. Retrieve relevant facts and multi-hop subgraph context
     result = await mem.search(
         user_id="alice",
-        query="What systems language should we use for the new service?",
+        query="What systems language should we use, and what is in Roppongi?",
         token_budget=200,
     )
 
@@ -176,8 +233,18 @@ async def main():
     # Output:
     # [Memories]
     # - User prefers using Rust for system programming instead of Go. (Event: 2026-10-26)
+    # [Knowledge Graph Relationships]
+    # - Tokyo --(HAS_DISTRICT)--> Roppongi
+    # - Roppongi --(HAS_ATTRACTION)--> Mori Art Museum
 
-    # 4. Explicit forget (GDPR / Right to Be Forgotten)
+    # 5. Multi-hop BFS pathfinding
+    paths = await graph_store.find_paths(
+        user_id="alice", source="Tokyo", target="Mori Art Museum", max_depth=3
+    )
+    if paths:
+        print("Found Path:", " -> ".join(f"{e.relation} -> {e.target}" for e in paths[0].edges))
+
+    # 6. Explicit forget (GDPR / Right to Be Forgotten)
     await mem.forget_all(user_id="alice")
     await mem.close()
 
@@ -257,8 +324,8 @@ Included Services:
 ## Privacy, Security & GDPR Compliance
 
 - **Local-First Default:** Runs completely offline using SQLite and local vector storage without telemetry or cloud dependencies.
-- **Strict Multi-Tenant Isolation:** All episodes, memories, access counters, and vector queries are strictly partitioned by `user_id`. Tenant isolation is enforced at the database layer and verified in CI.
-- **Right to Be Forgotten:** `mem.forget(user_id, memory_id)` and `mem.forget_all(user_id)` execute immediate hard-deletions across both relational and vector indexes.
+- **Strict Multi-Tenant Isolation:** All episodes, memories, access counters, knowledge graph entities, and vector queries are strictly partitioned by `user_id`. Tenant isolation is enforced at the database layer and verified in CI.
+- **Right to Be Forgotten:** `mem.forget(user_id, memory_id)` and `mem.forget_all(user_id)` execute immediate hard-deletions across relational, vector, and graph indexes.
 
 ---
 
@@ -266,7 +333,7 @@ Included Services:
 
 1. **Extraction Latency:** Extracting atomic facts via LLM introduces latency (200–800ms depending on provider). `memlayer` executes extraction **asynchronously in background tasks**, so interactive chat turns are never blocked.
 2. **LLM Extraction Cost:** Ingestion requires LLM API calls. For write-heavy chatbots with millions of daily turns, small local extraction models (e.g. Llama-3-8B via Ollama) or turn sampling are recommended.
-3. **Structured vs Graph Memory:** `memlayer` v1 extracts atomic facts with entity linkage. Complex multi-hop relational graph traversals (e.g., "Find the manager of the person who introduced Alice to Bob") are planned for v2 (`docs/ROADMAP.md`).
+3. **Hybrid Fact + Graph Memory:** `memlayer` combines atomic episodic facts with a pluggable Knowledge Graph layer (`InMemoryGraphStore` and `NetworkXGraphStore`). Multi-hop entity pathfinding (BFS / shortest paths) is injected directly into prompt context alongside hybrid scored memories. For large-scale distributed knowledge graphs (>100k entities per user), external graph databases (Neo4j, FalkorDB) can be integrated via the `GraphStoreBase` interface.
 
 ---
 
