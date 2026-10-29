@@ -19,6 +19,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from demo.wanderai import WANDERAI_SCENARIOS, TravelerProfile, WanderAIAgent
 from memlayer.api import MemoryLayer
 from memlayer.consolidate.conflicts import ConflictDetector
 from memlayer.extract.extractor import FactExtractor
@@ -27,8 +28,6 @@ from memlayer.models import Episode, ExtractedFact, ExtractionResult, MemoryItem
 from memlayer.store.graph_memory import InMemoryGraphStore
 from memlayer.store.sql import SQLStore
 from memlayer.store.vector import QdrantVectorStore
-
-from demo.wanderai import SEED_TRAVEL_TRIPLETS, TravelerProfile, WANDERAI_SCENARIOS, WanderAIAgent
 
 logger = logging.getLogger(__name__)
 
@@ -113,7 +112,9 @@ class DemoFactExtractor(FactExtractor):
                         )
                     )
                     matched = True
-                if "tokyo" in lower and ("spring" in lower or "trip" in lower or "planning" in lower):
+                if "tokyo" in lower and (
+                    "spring" in lower or "trip" in lower or "planning" in lower
+                ):
                     facts.append(
                         ExtractedFact(
                             content="Traveler is planning a 7-day trip to Tokyo in spring.",
@@ -123,7 +124,9 @@ class DemoFactExtractor(FactExtractor):
                         )
                     )
                     matched = True
-                if "paris" in lower and ("autumn" in lower or "trip" in lower or "plan" in lower or "eat" in lower):
+                if "paris" in lower and (
+                    "autumn" in lower or "trip" in lower or "plan" in lower or "eat" in lower
+                ):
                     facts.append(
                         ExtractedFact(
                             content="Traveler is planning a 4-day autumn trip to Paris.",
@@ -170,7 +173,9 @@ class DemoFactExtractor(FactExtractor):
                     )
                     matched = True
 
-                if "rust" in lower and ("migrated" in lower or "primary" in lower or "backend" in lower):
+                if "rust" in lower and (
+                    "migrated" in lower or "primary" in lower or "backend" in lower
+                ):
                     facts.append(
                         ExtractedFact(
                             content="User primary backend programming language is Rust.",
@@ -180,7 +185,9 @@ class DemoFactExtractor(FactExtractor):
                         )
                     )
                     matched = True
-                elif re.search(r"\b(go|golang)\b", lower) and ("backend" in lower or "programming" in lower or "language" in lower):
+                elif re.search(r"\b(go|golang)\b", lower) and (
+                    "backend" in lower or "programming" in lower or "language" in lower
+                ):
                     facts.append(
                         ExtractedFact(
                             content="User primary backend programming language is Go.",
@@ -242,7 +249,9 @@ class DemoFactExtractor(FactExtractor):
                     )
                     matched = True
 
-                if not matched and not any(k in lower for k in ["where", "what", "how", "who", "help", "recommend"]):
+                if not matched and not any(
+                    k in lower for k in ["where", "what", "how", "who", "help", "recommend"]
+                ):
                     facts.append(
                         ExtractedFact(
                             content=clean_text,

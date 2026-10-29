@@ -8,7 +8,6 @@ from __future__ import annotations
 
 import logging
 import os
-import re
 import time
 from typing import Any
 
@@ -153,7 +152,9 @@ class WanderAIAgent:
                     prompt_tokens = getattr(resp.usage, "prompt_tokens", prompt_tokens)
                     completion_tokens = getattr(resp.usage, "completion_tokens", 0)
             except Exception as exc:
-                logger.warning("LiteLLM completion error, falling back to contextual generator: %s", exc)
+                logger.warning(
+                    "LiteLLM completion error, falling back to contextual generator: %s", exc
+                )
                 reply = self._generate_contextual_reply(message, context_used)
         else:
             reply = self._generate_contextual_reply(message, context_used)
@@ -297,9 +298,19 @@ class WanderAIAgent:
             c_lower = m.content.lower()
             ent = (m.entity or "").lower()
 
-            if "vegan" in c_lower or "vegetarian" in c_lower or "gluten" in c_lower or "diet" in ent:
+            if (
+                "vegan" in c_lower
+                or "vegetarian" in c_lower
+                or "gluten" in c_lower
+                or "diet" in ent
+            ):
                 dietary.append(m.content)
-            elif "alliance" in c_lower or "oneworld" in c_lower or "airline" in c_lower or "loyalty" in ent:
+            elif (
+                "alliance" in c_lower
+                or "oneworld" in c_lower
+                or "airline" in c_lower
+                or "loyalty" in ent
+            ):
                 airline_loyalty.append(m.content)
             elif "budget" in c_lower or "$" in c_lower or "price" in ent:
                 budget_tier.append(m.content)
@@ -311,8 +322,10 @@ class WanderAIAgent:
         graph_nodes_count = 0
         graph_edges_count = 0
         if self.memlayer.graph_store and hasattr(self.memlayer.graph_store, "_nodes"):
-            user_nodes = self.memlayer.graph_store._nodes.get(user_id, {})  # type: ignore[attr-defined]
-            user_edges = self.memlayer.graph_store._edges.get(user_id, [])  # type: ignore[attr-defined]
+            nodes_dict: dict[str, Any] = getattr(self.memlayer.graph_store, "_nodes", {})
+            edges_dict: dict[str, Any] = getattr(self.memlayer.graph_store, "_edges", {})
+            user_nodes = nodes_dict.get(user_id, {})
+            user_edges = edges_dict.get(user_id, [])
             graph_nodes_count = len(user_nodes)
             graph_edges_count = len(user_edges)
 

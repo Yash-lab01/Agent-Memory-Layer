@@ -1,6 +1,6 @@
 """WanderAI travel companion integration package using Agent Memory Layer."""
 
-from .agent import TravelerProfile, WanderAIChatResult, WanderAIAgent
+from .agent import TravelerProfile, WanderAIAgent, WanderAIChatResult
 from .scenarios import SEED_TRAVEL_TRIPLETS, WANDERAI_SCENARIOS
 
 __all__ = [

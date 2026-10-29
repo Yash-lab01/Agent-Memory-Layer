@@ -10,6 +10,7 @@ import asyncio
 import json
 import logging
 import sys
+from typing import Any
 
 from memlayer.api import MemoryLayer
 from memlayer.consolidate.conflicts import ConflictDetector
@@ -20,8 +21,12 @@ from memlayer.store.graph_memory import InMemoryGraphStore
 from memlayer.store.sql import SQLStore
 from memlayer.store.vector import QdrantVectorStore
 
-from .agent import WanderAIAgent
-from .scenarios import WANDERAI_SCENARIOS
+try:
+    from .agent import WanderAIAgent
+    from .scenarios import WANDERAI_SCENARIOS
+except ImportError:
+    from demo.wanderai.agent import WanderAIAgent
+    from demo.wanderai.scenarios import WANDERAI_SCENARIOS
 
 # Configure logging
 logging.basicConfig(level=logging.WARNING)
@@ -147,7 +152,7 @@ async def run_wanderai_showcase() -> int:
         extractor=extractor,
     )
 
-    async def _conflict_completion(*_args, **kwargs) -> Any:
+    async def _conflict_completion(*_args: Any, **kwargs: Any) -> Any:
         messages = kwargs.get("messages", [])
         user_msg = messages[-1]["content"] if messages else ""
         conflicts = []
@@ -190,7 +195,9 @@ async def run_wanderai_showcase() -> int:
 
     # 2. Seed Destination Topology Knowledge Graph
     seed_count = await agent.seed_travel_knowledge(user_id=user_id)
-    print(f"[Knowledge] Seeded {seed_count} travel topology relations into Knowledge Graph (Paris, Tokyo districts & amenities).\n")
+    print(
+        f"[Knowledge] Seeded {seed_count} travel topology relations into Knowledge Graph (Paris, Tokyo districts & amenities).\n"
+    )
 
     # 3. Execute Showcase Dialogue Turns
     for scenario in WANDERAI_SCENARIOS:
@@ -202,7 +209,7 @@ async def run_wanderai_showcase() -> int:
         print("-" * 80)
         print(f">> TURN {turn}: {title}")
         print(f"   [Session: {session_id}]")
-        print(f"   [Traveler]: \"{user_message}\"")
+        print(f'   [Traveler]: "{user_message}"')
 
         result = await agent.chat(
             user_id=user_id,
@@ -235,11 +242,15 @@ async def run_wanderai_showcase() -> int:
 
     print(f"User Namespace : {profile.user_id}")
     print(f"Dietary Needs  : {', '.join(profile.dietary) if profile.dietary else 'None'}")
-    print(f"Airline Loyalty: {', '.join(profile.airline_loyalty) if profile.airline_loyalty else 'None'}")
+    print(
+        f"Airline Loyalty: {', '.join(profile.airline_loyalty) if profile.airline_loyalty else 'None'}"
+    )
     print(f"Budget Tier    : {', '.join(profile.budget_tier) if profile.budget_tier else 'None'}")
     print(f"Interests      : {', '.join(profile.interests) if profile.interests else 'None'}")
     print(f"Destinations   : {len(profile.destinations)} planned trips")
-    print(f"Graph Topology : {profile.graph_entities_count} entities, {profile.graph_relations_count} relations\n")
+    print(
+        f"Graph Topology : {profile.graph_entities_count} entities, {profile.graph_relations_count} relations\n"
+    )
 
     print("[NON-DESTRUCTIVE SUPERSESSION PROVENANCE]:")
     if profile.superseded_preferences:
