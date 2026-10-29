@@ -169,11 +169,11 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
 ---
 
 ## Milestone 9: Real Evaluation, Release & Portfolio (Spec 020)
-- [ ] **Phase 9.1: Harness Audit, Experimental Design Freeze & Cost Modeling**
-  - [ ] Audit harness in `eval/README.md` (document real vs stub models, embedder dimension, dataset sampling)
-  - [ ] Freeze models, dev/test splits, and seeds in `eval/configs/main.yaml`
-  - [ ] Implement cost estimation script in `scripts/estimate_eval_cost.py` with 25% safety buffer
-  - [ ] Implement query/completion disk caching keyed by `hash(model, prompt, params)`
+- [x] **Phase 9.1: Harness Audit, Experimental Design Freeze & Cost Modeling**
+  - [x] Audit harness in `eval/README.md` (document real vs stub models, embedder dimension, dataset sampling)
+  - [x] Freeze models, dev/test splits, and seeds in `eval/configs/main.yaml`
+  - [x] Implement cost estimation script in `eval/estimate_cost.py` with 25% safety buffer
+  - [x] Implement query/completion disk caching keyed by `hash(model, prompt, params)`
 - [ ] **Phase 9.2: Real Dataset Loaders & Chronological Ingestion Protocol**
   - [ ] Full/large-share LoCoMo dataset loader in `eval/datasets/locomo.py`
   - [ ] Stratified 100-150 question LongMemEval subset loader in `eval/datasets/longmemeval.py`

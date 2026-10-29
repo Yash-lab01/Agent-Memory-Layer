@@ -69,14 +69,14 @@ flowchart TD
 - **Phase 9.1: Harness Audit & Methodology Documentation (`eval/README.md`)**
   - Audit existing `eval/` code: verify LLM invocations, embedding dimension (toy 64-dim vs real model), dataset sampling, cache mechanics, and judge uniformity.
   - Document all architectural methodology in `eval/README.md`.
-- **Phase 9.2: Experimental Design Freeze & Cost Modeling (`eval/configs/main.yaml`, `scripts/estimate_eval_cost.py`)**
+- **Phase 9.2: Experimental Design Freeze & Cost Modeling (`eval/configs/main.yaml`, `eval/estimate_cost.py`)**
   - Freeze models across all comparisons:
     - **Answer Model:** Identical mid-size model across all systems (e.g. Gemini 1.5 Flash / GPT-4o-mini).
     - **Judge Model:** Recommended benchmark judge with category-specific prompts (e.g. Gemini 1.5 Pro / GPT-4o).
     - **Extraction Model:** Explicitly reported lightweight model (e.g. Llama-3-8B / Flash).
     - **Embedding Model:** Real dense embedder (e.g. `bge-small-en-v1.5` or `text-embedding-3-small`).
     - Fixed temperature = 0.0, deterministic random seeds.
-  - Implement `scripts/estimate_eval_cost.py` calculating ingestion, query, judge tokens, and API expenditure buffers.
+  - Implement `eval/estimate_cost.py` calculating ingestion, query, judge tokens, and API expenditure buffers.
 - **Phase 9.3: Real Dataset Loaders & Chronological Ingestion Protocol**
   - Implement `EvalItem` unified schema in `eval/datasets/models.py`.
   - Loaders for **LoCoMo** (large share / all available) and **LongMemEval** (stratified 100–150 question subset).
