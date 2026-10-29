@@ -413,4 +413,3 @@ def test_estimate_eval_cost_modeling() -> None:
     assert longmem_test.haystacks_count == 120
     assert longmem_test.ingestion_cost_usd > 0
     assert longmem_test.break_even_queries > 0
-
