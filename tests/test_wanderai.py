@@ -14,8 +14,6 @@ try:
     from demo.wanderai import (
         SEED_TRAVEL_TRIPLETS,
         WANDERAI_SCENARIOS,
-        TravelerProfile,
-        WanderAIAgent,
     )
 except ImportError:
     pytest.skip("fastapi and demo dependencies not installed", allow_module_level=True)
@@ -93,7 +91,9 @@ def test_wanderai_chat_flow_and_cross_trip_recall(client: TestClient) -> None:
     # The active vegan preference from Tokyo trip should be retrieved for Paris trip
     assert len(d2["retrieved_memories"]) > 0
     vegan_retrieved = any("vegan" in m["content"].lower() for m in d2["retrieved_memories"])
-    assert vegan_retrieved, "Active vegan preference from Tokyo trip must be recalled for Paris trip"
+    assert vegan_retrieved, (
+        "Active vegan preference from Tokyo trip must be recalled for Paris trip"
+    )
 
 
 def test_wanderai_preference_update_supersession(client: TestClient) -> None:
@@ -132,7 +132,9 @@ def test_wanderai_preference_update_supersession(client: TestClient) -> None:
 
     # Verify superseded history contains Star Alliance
     superseded_contents = [s["content"].lower() for s in prof["superseded_preferences"]]
-    assert any("star alliance" in c for c in superseded_contents), "Star Alliance Gold must be superseded"
+    assert any("star alliance" in c for c in superseded_contents), (
+        "Star Alliance Gold must be superseded"
+    )
 
 
 def test_wanderai_tenant_isolation(client: TestClient) -> None:
