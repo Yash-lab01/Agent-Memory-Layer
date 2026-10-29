@@ -166,3 +166,54 @@ This roadmap tracks the development progress of `memlayer` across 8 core milesto
   - [x] Dedicated WanderAI profile tab and scenario triggers in web UI
   - [x] Comprehensive unit and integration tests in `tests/test_wanderai.py`
 
+---
+
+## Milestone 9: Real Evaluation, Release & Portfolio (Spec 020)
+- [ ] **Phase 9.1: Harness Audit, Experimental Design Freeze & Cost Modeling**
+  - [ ] Audit harness in `eval/README.md` (document real vs stub models, embedder dimension, dataset sampling)
+  - [ ] Freeze models, dev/test splits, and seeds in `eval/configs/main.yaml`
+  - [ ] Implement cost estimation script in `scripts/estimate_eval_cost.py` with 25% safety buffer
+  - [ ] Implement query/completion disk caching keyed by `hash(model, prompt, params)`
+- [ ] **Phase 9.2: Real Dataset Loaders & Chronological Ingestion Protocol**
+  - [ ] Full/large-share LoCoMo dataset loader in `eval/datasets/locomo.py`
+  - [ ] Stratified 100-150 question LongMemEval subset loader in `eval/datasets/longmemeval.py`
+  - [ ] Implement `EvalItem` unified schema in `eval/datasets/models.py`
+  - [ ] Enforce chronological replay with original timestamps
+  - [ ] Pass question date as "now" anchor to prevent wall-clock drift in recency/decay
+  - [ ] Isolate tenant namespaces per haystack with reusable SQLite memory dumps
+- [ ] **Phase 9.3: Baseline Expansion**
+  - [ ] Standardize identical answer model, judge, and prompt templates across all baselines
+  - [ ] Implement Full-Context baseline with context window truncation telemetry
+  - [ ] Implement Naive RAG baseline (chunked dense top-k)
+  - [ ] Implement BM25 + Reranker baseline over raw chunks (evaluating value of atomic fact extraction)
+- [ ] **Phase 9.4: Statistical Engine & Honest Cost Accounting**
+  - [ ] Per-question JSONL logging (verdict, raw text, prompt/completion tokens, retrieval latency, total latency)
+  - [ ] Retrieval recall@k tracking against evidence IDs
+  - [ ] 95% bootstrap confidence intervals ($N=10,000$ resamples) per system and category
+  - [ ] Paired bootstrap difference and McNemar's tests across systems
+  - [ ] Amortized ingestion cost formula and break-even query count $Q^*$ analysis
+- [ ] **Phase 9.5: Judge Calibration & Pilot Run**
+  - [ ] Hand-grade 30-50 random judge verdicts and verify $\ge 90\%$ agreement rate
+  - [ ] Tune category-specific judge prompts for temporal and abstention queries
+  - [ ] Execute 10-question pilot run to verify end-to-end telemetry and token accounting
+- [ ] **Phase 9.6: Hyperparameter Tuning (Dev Split) & Main Test Execution**
+  - [ ] Tune $\alpha, \beta, \gamma, \tau, k$, and token budget solely on Dev split; freeze tagged `eval-v1`
+  - [ ] Execute main LoCoMo test split
+  - [ ] Execute main LongMemEval stratified test split
+  - [ ] Run 8 systematic ablations (without supersession, without decay, without recency, vector-only, without router, without graph context, extraction model size, token budget sweep)
+  - [ ] Classify 10+ failure cases into failure taxonomy
+- [ ] **Phase 9.7: Automated Report Generation & README Overhaul**
+  - [ ] Build `eval/generate_tables.py` to compile Markdown tables directly from JSONL results
+  - [ ] Configure `make eval-smoke` (CI fast check) and `make eval-full` (reproducible run)
+  - [ ] Update README with generated tables, 95% CIs, sample size $n$, break-even analysis, and CI smoke test note
+- [ ] **Phase 9.8: PyPI Release (v0.1.0) & Repository Polish**
+  - [ ] Finalize `pyproject.toml` metadata (classifiers, author, URLs, entry points)
+  - [ ] Build wheels with `uv build` and verify TestPyPI installation
+  - [ ] Publish v0.1.0 to PyPI using GitHub Actions trusted publishing
+  - [ ] Deploy MkDocs documentation site (`mkdocs gh-deploy`)
+  - [ ] Add `CONTRIBUTING.md`, GitHub issue templates, and 2-minute demo video/GIF walkthrough
+- [ ] **Phase 9.9: Portfolio Case Study & Resume Bullets**
+  - [ ] Comprehensive case study in `docs/CASE_STUDY.md` and `docs/PORTFOLIO.md`
+  - [ ] Update resume bullet templates strictly with verified benchmark numbers
+
+
