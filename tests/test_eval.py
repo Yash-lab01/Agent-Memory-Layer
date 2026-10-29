@@ -388,3 +388,29 @@ async def test_ablation_suite_execution(tmp_path: Path) -> None:
 
     suite_files = list((tmp_path / "results").glob("*suite*.json"))
     assert len(suite_files) == 1
+
+
+def test_estimate_eval_cost_modeling() -> None:
+    from eval.estimate_cost import estimate_benchmark_cost, load_config
+
+    config_path = Path("eval/configs/main.yaml")
+    assert config_path.exists(), "eval/configs/main.yaml must exist"
+    cfg = load_config(config_path)
+
+    locomo_dev = estimate_benchmark_cost(cfg, "locomo", "dev", buffer_ratio=0.25)
+    assert locomo_dev.benchmark == "LoCoMo"
+    assert locomo_dev.split == "dev"
+    assert locomo_dev.questions_count == 40
+    assert locomo_dev.haystacks_count == 2
+    assert locomo_dev.ingestion_cost_usd > 0
+    assert locomo_dev.break_even_queries > 0
+    assert locomo_dev.total_budget_usd > locomo_dev.subtotal_cost_usd
+
+    longmem_test = estimate_benchmark_cost(cfg, "longmemeval", "test", buffer_ratio=0.25)
+    assert longmem_test.benchmark == "LongMemEval"
+    assert longmem_test.split == "test"
+    assert longmem_test.questions_count == 120
+    assert longmem_test.haystacks_count == 120
+    assert longmem_test.ingestion_cost_usd > 0
+    assert longmem_test.break_even_queries > 0
+
