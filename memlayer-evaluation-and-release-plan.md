@@ -85,12 +85,12 @@ Write loaders in `eval/datasets/` that output a common format:
 @dataclass
 class EvalItem:
     qid: str
-    category: str             # benchmark's own category name
+    category: str  # benchmark's own category name
     question: str
-    question_date: str | None # LongMemEval gives a question date; temporal questions depend on it
+    question_date: str | None  # LongMemEval gives a question date; temporal questions depend on it
     gold_answer: str
-    sessions: list[Session]   # haystack: dated sessions of turns
-    evidence_ids: list[str]   # session/turn ids containing the answer (for retrieval recall)
+    sessions: list[Session]  # haystack: dated sessions of turns
+    evidence_ids: list[str]  # session/turn ids containing the answer (for retrieval recall)
     is_abstention: bool
 ```
 
@@ -144,11 +144,13 @@ Minimal code:
 ```python
 import numpy as np
 
+
 def bootstrap_ci(correct: np.ndarray, n_boot=10_000, seed=0):
     rng = np.random.default_rng(seed)
     n = len(correct)
     means = [correct[rng.integers(0, n, n)].mean() for _ in range(n_boot)]
     return correct.mean(), np.percentile(means, [2.5, 97.5])
+
 
 def paired_bootstrap_diff(a: np.ndarray, b: np.ndarray, n_boot=10_000, seed=0):
     """a, b: 0/1 correctness for the same questions. Returns diff and 95% CI."""
